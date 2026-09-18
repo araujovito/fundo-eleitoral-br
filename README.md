@@ -19,7 +19,9 @@ este projeto persegue é *onde* cada partido apostou o dinheiro:
 
 ## Estado atual
 
-Etapa de ingestão implementada; análise ainda não. Ver
+Ingestão implementada e com as 9 fontes dos três ciclos verificadas
+(2018, 2022 e 2026 — este último ainda em prestação parcial). Análise
+ainda não. Ver
 [docs/decisoes.md](docs/decisoes.md) para as decisões de arquitetura e as
 pendências conhecidas.
 
@@ -41,19 +43,16 @@ O projeto foi desenhado para rodar em ambiente efêmero na nuvem (Codespaces ou
 Colab), sem ocupar disco local. Há um `.devcontainer` pronto.
 
 ```bash
-pip install -e '.[dev]'
-
-# 1. confirmar que as URLs do catálogo respondem neste ambiente
-python -m fundo_eleitoral.ingestao --verificar --ano 2022
-
-# 2. baixar e converter um ciclo
-python -m fundo_eleitoral.ingestao --ano 2022
+make verificar   # testa as 9 URLs sem baixar nada
+make ingerir     # baixa e converte o ciclo de 2022 (~400 MB de download)
+make teste
 ```
 
-> O CDN do TSE responde **403 a partir de algumas faixas de IP residenciais** —
-> o domínio inteiro, não só o arquivo. Se `--verificar` falhar em tudo, o
-> problema é a rede de saída, não o catálogo. De dentro do Codespaces costuma
-> passar.
+> O CDN do TSE fica atrás de um bot manager que recusa clientes programáticos
+> pela impressão digital do TLS — `httpx` e `curl` levam 403 em todo o domínio,
+> mesmo com User-Agent de navegador. Por isso a ingestão usa `curl_cffi`
+> ([ADR-005](docs/decisoes.md)). Um **403** indica esse bloqueio; um **404**
+> indica nome de arquivo errado no catálogo.
 
 ## Fontes
 

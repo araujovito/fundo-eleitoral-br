@@ -55,13 +55,64 @@ automática diverge entre UFs do mesmo ano (uma UF sem nenhuma doação faz a
 coluna virar nulo e mudar de tipo), o que quebra o `concat`. Tipagem é decisão
 explícita da etapa de transformação, onde ela pode ser testada.
 
+## ADR-005 — `curl_cffi` em vez de `httpx` para falar com o TSE
+
+**Contexto.** O CDN do TSE fica atrás de um bot manager da Akamai. Requisições
+de `httpx` e `curl` recebem 403 em *todo* o domínio, mesmo declarando um
+User-Agent de Chrome. Testado de um IP residencial brasileiro e de um
+datacenter da Microsoft nos EUA: 403 nos dois. O mesmo arquivo baixa
+normalmente por um navegador.
+
+**Decisão.** Usar `curl_cffi` com `impersonate="chrome"`, que reproduz o
+handshake TLS do navegador.
+
+**Por quê.** A classificação é feita pela impressão digital do TLS, não pelo
+cabeçalho — por isso trocar o User-Agent não resolve. Confirmado: mesma
+máquina, mesma URL, `httpx` → 403, `curl_cffi` → 206 com os bytes do ZIP.
+
+Não há contorno de autenticação ou de paywall aqui: os dados são públicos por
+lei e o próprio portal oferece o link de download direto. O que se está
+contornando é uma heurística que classifica erroneamente um cliente
+programático legítimo.
+
+**Efeito colateral útil:** com o CDN acessível, um 404 passou a significar
+"nome de arquivo errado" em vez de se confundir com o 403 do bloqueio — foi
+assim que o ADR-006 apareceu.
+
+## ADR-006 — Ingerir apenas os arquivos `_BRASIL`
+
+**Contexto.** Cada ZIP traz, por tabela, 26 CSVs por UF **mais** um
+`_BRASIL.csv`. A leitura natural é que o `_BRASIL` seja a concatenação dos
+outros. Não é.
+
+**Medido em `receitas_candidatos_2022`:**
+
+| | linhas |
+|---|---|
+| soma dos 26 arquivos de UF | 271.352 |
+| `_BRASIL` sozinho | 674.944 |
+
+Por UF os números batem exatamente (SP: 40.138 nos dois). A diferença são
+393.016 linhas com `SG_UF = 'BR'` — as candidaturas de âmbito nacional, ou seja
+a eleição presidencial — que não aparecem em arquivo de UF nenhum. O DF também
+não tem arquivo próprio.
+
+**Decisão.** Ler só o `_BRASIL` de cada tabela.
+
+**Por quê.** Concatenar as UFs descartaria 58% das linhas de receita, incluindo
+a disputa presidencial inteira. E concatenar UFs *mais* `_BRASIL`, que era o que
+a primeira versão do código fazia por casar nome com prefixo, duplicaria tudo
+que já está no consolidado.
+
 ## Pendências conhecidas
 
-- **Catálogo de URLs não verificado.** `fontes.py` segue o padrão publicado
-  pelo TSE, mas o domínio responde 403 a partir de algumas faixas de IP
-  residenciais. Validar com `--verificar` num ambiente de saída liberada.
 - **Nomes de fornecedor vêm sujos.** Mesmo CNPJ aparece com grafias diferentes;
   a normalização é pré-requisito de qualquer análise por fornecedor.
 - **Transferências entre diretórios causam dupla contagem.** Somar receita
   ingenuamente infla o total: o repasse nacional → estadual → candidato aparece
   três vezes. Tratar como grafo, não como soma.
+- **`despesas_contratadas` x `despesas_pagas`.** São tabelas distintas e
+  divergem. Decidir explicitamente qual responde cada pergunta antes de somar
+  qualquer coisa.
+- **2026 está em prestação parcial.** O ZIP de candidatos já existe (137 MB
+  contra 377 MB de 2022), mas a prestação final só sai depois da eleição.

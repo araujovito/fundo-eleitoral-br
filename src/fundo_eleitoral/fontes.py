@@ -1,10 +1,14 @@
 """Catalogo de fontes do TSE.
 
-ATENCAO: os nomes de arquivo abaixo seguem o padrao publicado pelo portal de
-dados abertos do TSE, mas NAO foram verificados contra o servidor -- o dominio
-tse.jus.br responde 403 a partir de algumas faixas de IP residenciais. Rode
-`python -m fundo_eleitoral.ingestao --verificar` num ambiente com saida liberada
-(Codespaces, Colab) antes de confiar neste catalogo.
+Nomes verificados contra o CDN em 2026-09-18 para 2018, 2022 e 2026.
+
+Duas armadilhas de nomenclatura, ambas custaram um diagnostico errado antes de
+serem descobertas (ver docs/decisoes.md, ADR-005 e ADR-006):
+
+1. As contas de partido ficam sob "orgaos_partidarios", nao "partidos".
+2. Nao existe "despesas_<x>": existe "despesas_contratadas" e "despesas_pagas",
+   que sao coisas diferentes -- contratado e compromisso assumido, pago e
+   desembolso efetivo, e os dois divergem.
 """
 
 from __future__ import annotations
@@ -18,14 +22,19 @@ ANOS_ELEICAO = (2018, 2022, 2026)
 
 @dataclass(frozen=True)
 class Fonte:
-    """Um ZIP do TSE e o que esperamos encontrar dentro dele."""
+    """Um ZIP do TSE e as tabelas de interesse dentro dele.
+
+    `tabelas` guarda o nome-base de cada CSV, sem o ano e sem o sufixo de
+    abrangencia -- a montagem final vira `<tabela>_<ano>_BRASIL.csv`.
+    """
 
     chave: str
     url: str
     ano: int
-    # Prefixo dos CSVs de interesse dentro do ZIP. O TSE quebra por UF
-    # (ex.: receitas_candidatos_2022_SP.csv), entao casamos por prefixo.
-    prefixos_csv: tuple[str, ...]
+    tabelas: tuple[str, ...]
+
+    def arquivo_de(self, tabela: str) -> str:
+        return f"{tabela}_{self.ano}_BRASIL.csv"
 
 
 def fontes_do_ano(ano: int) -> list[Fonte]:
@@ -35,19 +44,29 @@ def fontes_do_ano(ano: int) -> list[Fonte]:
             chave=f"contas_candidatos_{ano}",
             url=f"{pc}/prestacao_de_contas_eleitorais_candidatos_{ano}.zip",
             ano=ano,
-            prefixos_csv=(f"receitas_candidatos_{ano}", f"despesas_candidatos_{ano}"),
+            tabelas=(
+                "receitas_candidatos",
+                "receitas_candidatos_doador_originario",
+                "despesas_contratadas_candidatos",
+                "despesas_pagas_candidatos",
+            ),
         ),
         Fonte(
-            chave=f"contas_partidos_{ano}",
-            url=f"{pc}/prestacao_de_contas_eleitorais_partidos_{ano}.zip",
+            chave=f"contas_orgaos_partidarios_{ano}",
+            url=f"{pc}/prestacao_de_contas_eleitorais_orgaos_partidarios_{ano}.zip",
             ano=ano,
-            prefixos_csv=(f"receitas_partidos_{ano}", f"despesas_partidos_{ano}"),
+            tabelas=(
+                "receitas_orgaos_partidarios",
+                "receitas_orgaos_partidarios_doador_originario",
+                "despesas_contratadas_orgaos_partidarios",
+                "despesas_pagas_orgaos_partidarios",
+            ),
         ),
         Fonte(
             chave=f"candidatos_{ano}",
             url=f"{BASE}/consulta_cand/consulta_cand_{ano}.zip",
             ano=ano,
-            prefixos_csv=(f"consulta_cand_{ano}",),
+            tabelas=("consulta_cand",),
         ),
     ]
 
@@ -61,6 +80,5 @@ def todas_fontes(anos: tuple[int, ...] = ANOS_ELEICAO) -> list[Fonte]:
 DIALETO_TSE = {
     "encoding": "latin-1",
     "separator": ";",
-    "decimal_comma": True,
     "null_values": ["#NULO#", "#NE#", "-1", ""],
 }

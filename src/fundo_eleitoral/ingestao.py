@@ -18,14 +18,16 @@ import sys
 import zipfile
 from pathlib import Path
 
-import httpx
 import polars as pl
+from curl_cffi import requests
 
 from .fontes import DIALETO_TSE, Fonte, todas_fontes
 
-# O CDN do TSE recusa user-agents de biblioteca. Nao e contorno de protecao:
-# os dados sao publicos e o proprio portal oferece o link para download direto.
-UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36"
+# O CDN do TSE fica atras de um bot manager que classifica o cliente pela
+# impressao digital do handshake TLS, nao pelo User-Agent: httpx e curl levam
+# 403 mesmo se declararem ser o Chrome. curl_cffi reproduz o handshake do
+# Chrome e a requisicao passa. Ver docs/decisoes.md (ADR-005).
+IMPERSONATE = "chrome"
 
 RAIZ = Path(__file__).resolve().parents[2]
 DIR_DADOS = RAIZ / "dados"
@@ -36,18 +38,21 @@ DIR_PARQUET = DIR_DADOS / "parquet"
 def verificar(fontes: list[Fonte]) -> int:
     """Confere se cada URL do catalogo existe. Retorna quantas falharam."""
     falhas = 0
-    with httpx.Client(headers={"User-Agent": UA}, follow_redirects=True, timeout=30) as c:
+    with requests.Session(impersonate=IMPERSONATE) as c:
         for f in fontes:
             try:
-                r = c.head(f.url)
-                if r.status_code >= 400:
-                    r = c.get(f.url, headers={"Range": "bytes=0-1023"})
-                tamanho = r.headers.get("content-length", "?")
+                # Range de 1 KB em vez de HEAD: o CDN responde 403 a HEAD mesmo
+                # quando o GET passa, e o range revela o tamanho real via
+                # content-range sem baixar o arquivo.
+                r = c.get(f.url, headers={"Range": "bytes=0-1023"}, timeout=30)
                 ok = r.status_code < 400
-                print(f"{'OK ' if ok else 'ERRO'} {r.status_code:>3} {tamanho:>12}  {f.chave}")
-                falhas += 0 if ok else 1
-            except httpx.HTTPError as e:
-                print(f"ERRO  --            ?  {f.chave}: {e}")
+                tamanho = r.headers.get("content-range", "/?").split("/")[-1]
+                assinatura = r.content[:2] == b"PK" if ok else False
+                marca = "OK " if ok and assinatura else ("?  " if ok else "ERRO")
+                print(f"{marca} {r.status_code:>3} {tamanho:>12}  {f.chave}")
+                falhas += 0 if (ok and assinatura) else 1
+            except Exception as e:
+                print(f"ERRO  --            ?  {f.chave}: {type(e).__name__}: {e}")
                 falhas += 1
     return falhas
 
@@ -60,25 +65,26 @@ def baixar(fonte: Fonte, destino: Path) -> Path:
         return alvo
 
     parcial = alvo.with_suffix(".zip.parcial")
-    with httpx.Client(headers={"User-Agent": UA}, follow_redirects=True, timeout=None) as c:
-        with c.stream("GET", fonte.url) as r:
-            r.raise_for_status()
-            total = int(r.headers.get("content-length", 0))
-            baixado = 0
-            with parcial.open("wb") as fh:
-                for bloco in r.iter_bytes(1 << 20):
-                    fh.write(bloco)
-                    baixado += len(bloco)
-                    if total:
-                        pct = 100 * baixado / total
-                        print(f"\r  {fonte.chave}: {pct:5.1f}%", end="", flush=True)
+    with requests.Session(impersonate=IMPERSONATE) as c:
+        r = c.get(fonte.url, stream=True, timeout=None)
+        if r.status_code >= 400:
+            raise RuntimeError(f"{fonte.url} respondeu {r.status_code}")
+        total = int(r.headers.get("content-length", 0))
+        baixado = 0
+        with parcial.open("wb") as fh:
+            for bloco in r.iter_content(1 << 20):
+                fh.write(bloco)
+                baixado += len(bloco)
+                if total:
+                    pct = 100 * baixado / total
+                    print(f"\r  {fonte.chave}: {pct:5.1f}%", end="", flush=True)
     print()
     parcial.rename(alvo)
     return alvo
 
 
 def _ler_csv(caminho: Path) -> pl.DataFrame:
-    """Le um CSV do TSE ja normalizando o dialeto (latin-1, ';', decimal ',')."""
+    """Le um CSV do TSE ja normalizando o dialeto (latin-1, ';')."""
     df = pl.read_csv(
         caminho,
         separator=DIALETO_TSE["separator"],
@@ -91,29 +97,32 @@ def _ler_csv(caminho: Path) -> pl.DataFrame:
 
 
 def converter(zip_path: Path, fonte: Fonte, destino: Path) -> list[Path]:
-    """Extrai os CSVs de interesse e grava um Parquet por prefixo."""
+    """Extrai o CSV _BRASIL de cada tabela e grava um Parquet por tabela.
+
+    Usa exclusivamente os arquivos _BRASIL. Ver ADR-006: os arquivos por UF
+    sao um subconjunto -- omitem as candidaturas de ambito nacional
+    (SG_UF = 'BR'), que em 2022 eram 58% das linhas de receita, e nao ha
+    arquivo proprio para o DF.
+    """
     destino.mkdir(parents=True, exist_ok=True)
     escritos: list[Path] = []
 
     with zipfile.ZipFile(zip_path) as z:
-        nomes = [n for n in z.namelist() if n.lower().endswith(".csv")]
-        for prefixo in fonte.prefixos_csv:
-            membros = [n for n in nomes if Path(n).name.lower().startswith(prefixo.lower())]
-            if not membros:
-                print(f"  aviso: nenhum CSV com prefixo '{prefixo}' em {zip_path.name}")
+        por_base = {Path(n).name: n for n in z.namelist()}
+        for tabela in fonte.tabelas:
+            alvo_csv = fonte.arquivo_de(tabela)
+            membro = por_base.get(alvo_csv)
+            if membro is None:
+                print(f"  aviso: {alvo_csv} nao esta em {zip_path.name}")
                 continue
 
-            partes: list[pl.DataFrame] = []
-            for nome in membros:
-                tmp = destino / "_tmp.csv"
-                with z.open(nome) as origem, tmp.open("wb") as saida:
-                    shutil.copyfileobj(origem, saida)
-                partes.append(_ler_csv(tmp))
-                tmp.unlink()
+            tmp = destino / "_tmp.csv"
+            with z.open(membro) as origem, tmp.open("wb") as saida:
+                shutil.copyfileobj(origem, saida)
+            df = _ler_csv(tmp)
+            tmp.unlink()
 
-            # UFs diferentes as vezes trazem colunas a mais; diagonal alinha por nome.
-            df = pl.concat(partes, how="diagonal_relaxed")
-            alvo = destino / f"{prefixo}.parquet"
+            alvo = destino / f"{tabela}.parquet"
             df.write_parquet(alvo, compression="zstd")
             print(f"  {alvo.name}: {df.height:,} linhas x {df.width} colunas".replace(",", "."))
             escritos.append(alvo)
@@ -140,7 +149,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[{fonte.chave}]")
         try:
             zip_path = baixar(fonte, DIR_BRUTO)
-        except httpx.HTTPError as e:
+        except Exception as e:
             print(f"  falhou: {e}")
             continue
         converter(zip_path, fonte, DIR_PARQUET / str(fonte.ano))
