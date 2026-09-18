@@ -36,3 +36,14 @@ def test_despesas_sao_sempre_qualificadas():
 def test_arquivo_de_monta_nome_brasil():
     f = next(f for f in fontes_do_ano(2018) if f.chave.startswith("contas_candidatos"))
     assert f.arquivo_de("receitas_candidatos") == "receitas_candidatos_2018_BRASIL.csv"
+
+
+def test_cartao_do_dataset_menciona_as_armadilhas():
+    from fundo_eleitoral.publicacao import montar_cartao
+
+    cartao = montar_cartao((2018, 2022))
+    # O cartao e a unica documentacao que acompanha o dado fora deste repo;
+    # se estas ressalvas sairem dele, quem consumir soma errado.
+    assert "despesas_pagas" in cartao
+    assert "dupla contagem" in cartao
+    assert "2018, 2022" in cartao

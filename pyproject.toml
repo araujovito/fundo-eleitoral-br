@@ -8,6 +8,7 @@ dependencies = [
     "polars>=1.0",
     "pyarrow>=17",
     "curl_cffi>=0.7",
+    "huggingface-hub>=0.25",
     "tqdm>=4.66",
 ]
 

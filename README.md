@@ -32,9 +32,10 @@ DuckDB, sem banco servidor. As duas etapas são deliberadamente separadas —
 o porquê está em [ADR-001](docs/decisoes.md#adr-001--ingestão-e-análise-são-etapas-separadas).
 
 ```
-fontes.py     catálogo de URLs e dialeto dos CSVs do TSE
-ingestao.py   baixa → extrai → converte para Parquet  (roda raro)
-dados/        ignorado pelo git; Parquet publicado no Hugging Face (ADR-002)
+fontes.py      catálogo de URLs e dialeto dos CSVs do TSE
+ingestao.py    baixa → extrai → converte para Parquet  (roda raro)
+publicacao.py  sobe os Parquet para um dataset público no Hugging Face
+dados/         ignorado pelo git (ADR-002)
 ```
 
 ## Rodando
@@ -43,10 +44,17 @@ O projeto foi desenhado para rodar em ambiente efêmero na nuvem (Codespaces ou
 Colab), sem ocupar disco local. Há um `.devcontainer` pronto.
 
 ```bash
-make verificar   # testa as 9 URLs sem baixar nada
-make ingerir     # baixa e converte o ciclo de 2022 (~400 MB de download)
+make verificar                              # testa as 9 URLs sem baixar nada
+REPO=usuario/fundo-eleitoral-br make tudo   # ingere e publica o ciclo
 make teste
+
+make ingerir ANO=2018                       # um ciclo especifico
 ```
+
+`make tudo` encadeia ingestão e publicação de propósito: o Parquet não pode
+ficar só na máquina efêmera ([ADR-007](docs/decisoes.md)). Para publicar é
+preciso uma conta no Hugging Face e um token de escrita, via
+`huggingface-cli login` ou `HF_TOKEN`.
 
 > O CDN do TSE fica atrás de um bot manager que recusa clientes programáticos
 > pela impressão digital do TLS — `httpx` e `curl` levam 403 em todo o domínio,

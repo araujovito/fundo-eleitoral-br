@@ -116,3 +116,23 @@ que já está no consolidado.
   qualquer coisa.
 - **2026 está em prestação parcial.** O ZIP de candidatos já existe (137 MB
   contra 377 MB de 2022), mas a prestação final só sai depois da eleição.
+
+## ADR-007 — Publicação é etapa do pipeline, não passo manual
+
+**Contexto.** A ingestão roda em Codespaces, que hiberna em 30 minutos de
+inatividade e é apagado após 30 dias parado. Um `make ingerir` bem-sucedido
+produz centenas de MB de Parquet que existem apenas ali dentro.
+
+**Decisão.** `fundo_eleitoral.publicacao` sobe os Parquet para um dataset
+público no Hugging Face, e `make tudo` encadeia ingestão e publicação. O
+dataset leva um cartão gerado pelo próprio código, com a proveniência e as três
+armadilhas de leitura (contratada x paga, dupla contagem entre diretórios,
+tudo string).
+
+**Por quê.** Se publicar for um passo manual e opcional, mais cedo ou mais tarde
+alguém — provavelmente eu mesmo — vai rodar a ingestão, fechar a aba e perder o
+resultado. Encadeado, o caminho barato e o caminho correto são o mesmo.
+
+**Público, não privado:** o dado é público de origem, e um dataset aberto torna
+a análise reproduzível sem exigir que terceiros refaçam a ingestão — que é
+justamente a parte cara e cheia de armadilhas.
