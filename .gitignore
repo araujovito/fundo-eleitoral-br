@@ -1,0 +1,13 @@
+# Dados nunca entram no repo. Ver docs/decisoes.md (ADR-002).
+/dados/
+*.zip
+*.csv
+*.parquet
+!/dados/dimensoes/*.parquet
+
+__pycache__/
+*.py[cod]
+.venv/
+.ipynb_checkpoints/
+.duckdb
+.env

@@ -1,0 +1,11 @@
+{
+  "name": "fundo-eleitoral-br",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "postCreateCommand": "pip install -e '.[dev]'",
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python", "charliermarsh.ruff"]
+    }
+  },
+  "hostRequirements": { "storage": "32gb" }
+}
