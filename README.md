@@ -26,7 +26,7 @@ Ingestão completa nos três ciclos, dados publicados em
 [huggingface.co/datasets/buscafe/fundo-eleitoral-br](https://huggingface.co/datasets/buscafe/fundo-eleitoral-br)
 (27 tabelas, 364 MB, público). Quatro recortes de análise prontos: cota de
 gênero, concentração x pulverização, incumbentes x novos nomes e
-proporcionalidade racial e prioridade geográfica.
+proporcionalidade racial, prioridade geográfica e eficiência eleitoral.
 
 ### Achado: a cota de gênero não é uma regra de 30%
 
@@ -66,6 +66,18 @@ atribuir sua receita a estados seria uma suposição sem base nos dados.
 ```bash
 python -m fundo_eleitoral.geografia --ano 2022
 python -m fundo_eleitoral.geografia --ano 2022 --por-partido --minimo-milhoes 20
+```
+
+### Eficiência eleitoral: FEFC direto por voto nominal
+
+`fundo_eleitoral.eficiencia` mostra quanto FEFC direto corresponde a cada voto
+nominal, por partido, UF, cargo e resultado da candidatura. Para evitar dupla
+contagem, campanhas que disputaram dois turnos usam somente o último; voto de
+legenda não entra porque não é atribuível a uma candidatura.
+
+```bash
+python -m fundo_eleitoral.eficiencia --ano 2022
+python -m fundo_eleitoral.eficiencia --ano 2022 --por partido cargo --minimo-milhoes 20
 ```
 
 ### Achado: o FEFC ficou mais pulverizado nas chapas federais
@@ -135,6 +147,7 @@ concentracao.py mede concentração do FEFC por partido, UF e cargo
 renovacao.py    compara FEFC de incumbentes, recorrentes e novos nomes
 raca.py         compara candidaturas negras e repasses diretos de FEFC
 geografia.py    compara FEFC por UF com o peso de cada UF no eleitorado
+eficiencia.py    mede FEFC direto por voto nominal e resultado eleitoral
 dados/          ignorado, exceto dimensões pequenas versionadas (ADR-002)
 ```
 
