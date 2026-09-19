@@ -104,6 +104,28 @@ def test_recorte_por_uf_e_filtro_de_aptidao(tmp_path):
     ]
 
 
+def test_filtra_cargo_uf_e_tamanho_minimo_do_grupo(tmp_path):
+    _gravar_base_sintetica(tmp_path)
+
+    linhas = concentracao_fefc(
+        2022,
+        raiz=tmp_path,
+        minimo_reais=1,
+        minimo_candidaturas=3,
+        cargos=("deputado federal",),
+        ufs=("sp", "rj"),
+    )
+
+    assert [(x.partido, x.metricas.n_candidaturas) for x in linhas] == [("P", 3)]
+
+    assert concentracao_fefc(
+        2022,
+        raiz=tmp_path,
+        minimo_reais=1,
+        cargos=("GOVERNADOR",),
+    ) == []
+
+
 def test_rejeita_dimensao_invalida(tmp_path):
     with pytest.raises(ValueError, match="dimensoes invalidas"):
         concentracao_fefc(2022, raiz=tmp_path, por=("genero",))

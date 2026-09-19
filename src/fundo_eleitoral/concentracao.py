@@ -122,7 +122,10 @@ def concentracao_fefc(
     raiz: str | Path = HF,
     por: tuple[str, ...] = (),
     minimo_reais: float = 20e6,
+    minimo_candidaturas: int = 1,
     apenas_aptas: bool = False,
+    cargos: tuple[str, ...] = (),
+    ufs: tuple[str, ...] = (),
 ) -> list[LinhaConcentracao]:
     """Mede a concentracao do FEFC dentro de cada partido.
 
@@ -132,6 +135,10 @@ def concentracao_fefc(
     reconciliar com o FEFC efetivamente repassado. ``apenas_aptas`` oferece o
     recorte alternativo para perguntas sobre a disputa eleitoral final; em
     2026 ele nao e aplicado enquanto a situacao ainda nao tiver sido publicada.
+
+    ``cargos`` e ``ufs`` permitem comparar apenas disputas equivalentes. Isso
+    e essencial para estudar puxadores: misturar Presidencia, governos e
+    eleicoes proporcionais torna a concentracao nacional pouco interpretavel.
     """
     invalidas = set(por) - _DIMENSOES.keys()
     if invalidas:
@@ -170,9 +177,15 @@ def concentracao_fefc(
     """).fetchall()
 
     indices = tuple({"uf": 1, "cargo": 2}[d] for d in por)
+    filtro_cargos = {cargo.upper() for cargo in cargos}
+    filtro_ufs = {uf.upper() for uf in ufs}
     grupos: dict[tuple[str, ...], list[float]] = defaultdict(list)
     atributos: dict[tuple[str, ...], tuple[str | None, str | None]] = {}
     for partido, uf, cargo, valor in rows:
+        if filtro_cargos and (cargo or "").upper() not in filtro_cargos:
+            continue
+        if filtro_ufs and (uf or "").upper() not in filtro_ufs:
+            continue
         # Normalizacao minima documentada no contexto; nao tenta fundir partidos
         # que de fato mudaram por incorporacao ou federacao entre ciclos.
         partido = "PCDOB" if partido == "PC DO B" else partido
@@ -187,7 +200,7 @@ def concentracao_fefc(
     resultado = []
     for chave, valores in grupos.items():
         metricas = calcular_metricas(valores)
-        if metricas.total < minimo_reais:
+        if metricas.total < minimo_reais or metricas.n_candidaturas < minimo_candidaturas:
             continue
         uf, cargo = atributos[chave]
         resultado.append(LinhaConcentracao(ano, chave[0], uf, cargo, metricas))
@@ -207,10 +220,20 @@ def relatorio(
     ano: int,
     por: tuple[str, ...] = (),
     minimo_reais: float = 20e6,
+    minimo_candidaturas: int = 1,
     apenas_aptas: bool = False,
+    cargos: tuple[str, ...] = (),
+    ufs: tuple[str, ...] = (),
 ) -> None:
-    linhas = concentracao_fefc(ano, por=por, minimo_reais=minimo_reais,
-                               apenas_aptas=apenas_aptas)
+    linhas = concentracao_fefc(
+        ano,
+        por=por,
+        minimo_reais=minimo_reais,
+        minimo_candidaturas=minimo_candidaturas,
+        apenas_aptas=apenas_aptas,
+        cargos=cargos,
+        ufs=ufs,
+    )
     detalhe = " / ".join(por) if por else "nacional"
     print(f"\n=== {ano} — concentracao do FEFC por partido ({detalhe})")
     print("    partido       UF  cargo                   FEFC   cand.  cob.   Gini"
@@ -230,7 +253,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--ano", type=int, action="append", help="ano eleitoral (repetivel)")
     p.add_argument("--por", choices=tuple(_DIMENSOES), nargs="*", default=())
     p.add_argument("--minimo-milhoes", type=float, default=20.0)
+    p.add_argument("--minimo-candidaturas", type=int, default=1)
     p.add_argument("--apenas-aptas", action="store_true")
+    p.add_argument("--cargo", action="append", default=[], help="cargo exato (repetivel)")
+    p.add_argument("--uf", action="append", default=[], help="sigla da UF (repetivel)")
     args = p.parse_args(argv)
 
     for ano in args.ano or [2018, 2022, 2026]:
@@ -238,7 +264,10 @@ def main(argv: list[str] | None = None) -> int:
             ano,
             por=tuple(args.por),
             minimo_reais=args.minimo_milhoes * 1e6,
+            minimo_candidaturas=args.minimo_candidaturas,
             apenas_aptas=args.apenas_aptas,
+            cargos=tuple(args.cargo),
+            ufs=tuple(args.uf),
         )
     return 0
 
