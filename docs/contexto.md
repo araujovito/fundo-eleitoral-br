@@ -47,20 +47,24 @@ participação dos 10% do topo. Nas chapas a deputado federal, o Gini mediano po
 partido e UF caiu de 0,761 em 2018 para 0,629 em 2022. Método completo em
 [concentracao.md](concentracao.md).
 
+**Terceiro recorte: incumbentes x novos nomes.** O pareamento por CPF usa o
+resultado eleitoral anterior para separar incumbentes de meros candidatos
+recorrentes. Em 2022, incumbentes no mesmo cargo eram 4,0% das candidaturas a
+deputado federal e receberam 28,3% do FEFC; a média individual foi 12,5 vezes a
+de um nome novo no recorte. Método e limites em [renovacao.md](renovacao.md).
+
 ## O que pretendemos fazer
 
 Em ordem de interesse, não necessariamente de execução:
 
-1. **Incumbentes x estreantes.** O fundo financia renovação ou reeleição?
-   Exige cruzar `consulta_cand` entre ciclos por CPF.
-2. **Proporcionalidade racial.** Mesmo método da cota de gênero, usando
+1. **Proporcionalidade racial.** Mesmo método da cota de gênero, usando
    `ds_cor_raca`, que já vem nas receitas.
-3. **Prioridade geográfica.** Quais UFs recebem acima do seu peso no
+2. **Prioridade geográfica.** Quais UFs recebem acima do seu peso no
    eleitorado — e se isso acompanha disputa apertada ou reduto consolidado.
-4. **Eficiência.** Reais por voto obtido, por partido e por perfil de
+3. **Eficiência.** Reais por voto obtido, por partido e por perfil de
    candidatura. Depende de ingerir os resultados
    (`votacao_candidato_munzona`), ainda fora do catálogo.
-5. **O caminho do dinheiro.** Repasse nacional → estadual → candidatura, com
+4. **O caminho do dinheiro.** Repasse nacional → estadual → candidatura, com
    as tabelas de órgãos partidários e de doador originário. É a parte mais
    difícil e a mais reveladora.
 

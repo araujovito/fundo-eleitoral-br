@@ -21,8 +21,8 @@ este projeto persegue é *onde* cada partido apostou o dinheiro:
 
 Ingestão completa nos três ciclos, dados publicados em
 [huggingface.co/datasets/buscafe/fundo-eleitoral-br](https://huggingface.co/datasets/buscafe/fundo-eleitoral-br)
-(27 tabelas, 364 MB, público). Dois recortes de análise prontos: cota de gênero
-e concentração x pulverização do FEFC.
+(27 tabelas, 364 MB, público). Três recortes de análise prontos: cota de gênero,
+concentração x pulverização e incumbentes x novos nomes.
 
 ### Achado: a cota de gênero não é uma regra de 30%
 
@@ -60,6 +60,22 @@ python -m fundo_eleitoral.concentracao --ano 2022 --por uf cargo \
   --cargo "DEPUTADO FEDERAL" --minimo-milhoes 1 --minimo-candidaturas 10
 ```
 
+### Achado: incumbentes recebem 12,5 vezes mais que novos nomes
+
+Nas candidaturas a deputado federal de 2022, quem havia sido eleito para o
+mesmo cargo em 2018 representava **4,0% dos candidatos, mas recebeu 28,3% do
+FEFC**. A média foi de R$ 1,739 milhão por incumbente contra R$ 139 mil por nome
+ausente do ciclo anterior.
+
+A classificação usa CPF e o resultado da eleição anterior; portanto não
+confunde mera candidatura repetida com mandato conquistado. Veja definições,
+partidos e limites em [docs/renovacao.md](docs/renovacao.md). Reproduz com:
+
+```bash
+python -m fundo_eleitoral.renovacao --ano 2022 --por \
+  --cargo "DEPUTADO FEDERAL"
+```
+
 ## Arquitetura em uma frase
 
 Ingestão baixa os ZIPs do TSE e escreve Parquet; a análise só lê Parquet, via
@@ -72,6 +88,7 @@ ingestao.py    baixa → extrai → converte para Parquet  (roda raro)
 publicacao.py  sobe os Parquet para um dataset público no Hugging Face
 analise.py     consultas sobre os Parquet (lê do HF, não baixa nada)
 concentracao.py mede concentração do FEFC por partido, UF e cargo
+renovacao.py    compara FEFC de incumbentes, recorrentes e novos nomes
 dados/         ignorado pelo git (ADR-002)
 ```
 
