@@ -191,3 +191,26 @@ total inflado em 24%); PSB em 2022, de 0,810 para 0,785.
 **Observação sobre 2018.** A inflação de 8,26% é o dobro da de 2022. Vale
 investigar se reflete mudança de regra entre ciclos ou apenas o FEFC menor
 daquele ano — não está respondido.
+
+### ADR-009, adendo: o viés do repasse tem cor e gênero
+
+Ao aplicar a exclusão à análise de cota, apareceu um segundo motivo para ela,
+mais forte que a dupla contagem. O repasse entre candidaturas não é uma amostra
+aleatória do fundo:
+
+| | FEFC total | só o repasse entre candidaturas |
+|---|---|---|
+| Masculino (2022) | 69,2% | 75,3% |
+| Masculino (2026) | 65,5% | 75,8% |
+| Preta (2022) | 9,1% | 10,9% |
+
+Três quartos do que circula entre candidaturas vai para homens, contra dois
+terços do fundo como um todo. Incluir esse fluxo no denominador da cota
+subestimava a fatia feminina — e a distorção cresce de 2022 para 2026.
+
+Efeito na medida: 2018 passa de 26,7% para 27,6%; 2022, de 30,8% para 31,0%;
+2026, de 34,5% para 34,7%. Dois partidos mudam de lado em 2022 (Republicanos e
+PCdoB, ambos marginais), e o corte de R$ 20 mi passa a excluir um partido que
+só alcançava o limite graças ao repasse — daí 23 partidos onde antes eram 24.
+
+**Pendência:** `raca.py` e `renovacao.py` ainda não aplicam a exclusão.

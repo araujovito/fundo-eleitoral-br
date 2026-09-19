@@ -27,18 +27,25 @@ proporcionalidade racial.
 
 ### Achado: a cota de gênero não é uma regra de 30%
 
-| ciclo | FEFC | a candidaturas femininas |
+FEFC repassado **diretamente pelo partido** às candidaturas — o que a cota
+regula. Repasse entre candidaturas fica fora ([ADR-009](docs/decisoes.md)).
+
+| ciclo | FEFC direto | a candidaturas femininas |
 |---|---|---|
-| 2018 | R$ 1,83 bi | 26,7% |
-| 2022 | R$ 4,90 bi | 30,8% |
-| 2026 (parcial) | R$ 4,68 bi | 34,5% |
+| 2018 | R$ 1,69 bi | 27,6% |
+| 2022 | R$ 4,74 bi | 31,0% |
+| 2026 (parcial) | R$ 4,61 bi | 34,7% |
 
 O agregado sugere cumprimento a partir de 2022. Mas a regra (ADI 5617) exige
 repasse **proporcional** às candidaturas femininas do partido, com 30% apenas
-como piso. Medido assim, **15 dos 24 partidos analisados descumpriram em
-2022** — e 9 deles estavam acima dos 30%, portanto invisíveis sob a leitura
-simplificada. O PT repassou 27,2% com 37,1% de candidaturas; o MDB, 31,7%
+como piso. Medido assim, **13 dos 23 partidos analisados descumpriram em
+2022** — e 7 deles estavam acima dos 30%, portanto invisíveis sob a leitura
+simplificada. O PT repassou 27,0% com 37,1% de candidaturas; o MDB, 32,2%
 com 34,2%.
+
+Em 2026, com prestação parcial, o padrão se inverte: dos 13 partidos abaixo do
+exigido, **12 estão acima dos 30%** — o piso virou teto na prática, e quase
+todo o descumprimento hoje é invisível para quem só confere o número redondo.
 
 Reproduz com `python -m fundo_eleitoral.analise` — lê direto do Hugging Face,
 sem ingestão local. Ver
@@ -78,6 +85,11 @@ python -m fundo_eleitoral.renovacao --ano 2022 --por \
 ```
 
 ### Achado: candidaturas negras são metade, mas recebem 36,6%
+
+> Nota: este recorte e o de renovação ainda somam o repasse entre candidaturas,
+> que o [ADR-009](docs/decisoes.md) exclui. O efeito na composição racial é de
+> 1 a 2 pontos percentuais, mas infla o total do fundo em 3,4% (2022).
+> Pendência aberta.
 
 Em 2022, pessoas pretas e pardas representavam **50,3% das candidaturas**, mas
 receberam diretamente **36,6% do FEFC**. A diferença de 13,7 pontos percentuais

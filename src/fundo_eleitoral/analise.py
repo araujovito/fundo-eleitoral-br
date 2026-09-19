@@ -24,6 +24,13 @@ PISO_LEGAL = 30.0
 # vr_receita vem como texto com virgula decimal (tudo e string por ADR-004).
 _VALOR = "CAST(replace(vr_receita, ',', '.') AS DOUBLE)"
 
+# O que a cota regula e a distribuicao FEITA PELO PARTIDO. FEFC que chega a uma
+# candidatura vindo de outra candidatura ja foi contado quando o partido o
+# repassou, e esse fluxo e enviesado: 75% dele vai para homens, contra 69% do
+# fundo como um todo (2022). Incluir inflava o denominador e subestimava a
+# fatia feminina. Ver ADR-009.
+_SO_REPASSE_DIRETO = "AND ds_origem_receita <> 'Recursos de outros candidatos'"
+
 
 @dataclass(frozen=True)
 class LinhaPartido:
@@ -80,7 +87,7 @@ def cota_genero(ano: int, raiz: str | Path = HF, minimo_reais: float = 20e6) -> 
                  sum({_VALOR}) AS total,
                  sum(CASE WHEN ds_genero = 'Feminino' THEN {_VALOR} END) AS fem
           FROM '{rec}'
-          WHERE ds_fonte_receita = 'FUNDO ESPECIAL'
+          WHERE ds_fonte_receita = 'FUNDO ESPECIAL' {_SO_REPASSE_DIRETO}
           GROUP BY 1
         ),
         cands AS (
@@ -103,7 +110,8 @@ def total_nacional(ano: int, raiz: str | Path = HF) -> tuple[float, float]:
     rec = _base(raiz, ano, "receitas_candidatos")
     total, fem = duckdb.sql(f"""
         SELECT sum({_VALOR}), sum(CASE WHEN ds_genero = 'Feminino' THEN {_VALOR} END)
-        FROM '{rec}' WHERE ds_fonte_receita = 'FUNDO ESPECIAL'
+        FROM '{rec}'
+        WHERE ds_fonte_receita = 'FUNDO ESPECIAL' {_SO_REPASSE_DIRETO}
     """).fetchone()
     return total / 1e9, 100 * fem / total
 
