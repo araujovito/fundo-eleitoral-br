@@ -47,15 +47,20 @@ quem clonar o repositório reproduz os números sem refazer a ingestão.
 | `eficiencia` | quanto custa cada voto? | [eficiencia.md](eficiencia.md) |
 | `fluxos` | por onde o dinheiro circula? | [fluxos.md](fluxos.md) |
 
-**Dashboard.** `dashboard/` traz o Observatório do Fundo Eleitoral: seis abas
-em React sobre os mesmos agregados, com filtro por ciclo, partido e cargo.
-Ele não consulta o Parquet ao abrir — `dashboard.py` exporta uma fotografia
-datada para `dashboard/public/data.json`, sem nome, CPF ou CNPJ, e a interface
-lê esse arquivo. Atualizar o painel é reexecutar a exportação e commitar o
-JSON. Limites registrados em [dashboard/README.md](../dashboard/README.md): a
-aba de eficiência só compara cargos proporcionais de turno único, e a
-validação foi por tipos, build e testes de reconciliação — não por inspeção
-visual no navegador.
+**Dashboard.** `dashboard/` traz a **Festa da Democracia**: sete abas em React
+sobre os mesmos agregados, com filtros por ciclo, partido e cargo. A interface
+prioriza uma leitura editorial, mas mantém as tabelas e os agregados
+verificáveis. Ela não consulta o Parquet ao abrir — `dashboard.py` exporta uma
+fotografia datada para `dashboard/public/data.json`, sem nome, CPF ou CNPJ, e a
+interface lê esse arquivo. Atualizar o painel é reexecutar a exportação e
+commitar o JSON.
+
+Os limites permanecem explícitos: eficiência compara apenas cargos
+proporcionais de turno único; território usa cadeiras em disputa quando há um
+único cargo escolhido e eleitorado apenas como referência descritiva no
+recorte amplo; fluxos não somam as etapas como dinheiro novo; e 2026 é parcial.
+Além de tipos, build e testes de reconciliação, a interface foi revisada em
+desktop, tablet e celular.
 
 ## O que aprendemos
 

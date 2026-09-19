@@ -189,10 +189,11 @@ dados/          ignorado, exceto dimensões pequenas versionadas (ADR-002)
 
 ### Dashboard
 
-O diretório `dashboard/` contém o Observatório do Fundo Eleitoral: seis abas
-interativas com visão geral, território, representatividade, eficiência,
-fluxos e metodologia. Inclui filtros por ciclo, partido e cargo, tabelas
-pesquisáveis, gráficos e download dos agregados.
+O diretório `dashboard/` contém a **Festa da Democracia**, uma leitura
+editorial dos dados do Fundo Eleitoral. São sete abas interativas: visão geral,
+território, representatividade, estratégia, eficiência, caminho do dinheiro e
+metodologia. Inclui filtros por ciclo, partido e cargo, tabelas pesquisáveis,
+gráficos e download dos agregados.
 
 ```bash
 cd dashboard
@@ -206,9 +207,12 @@ Para atualizar os agregados, execute na raiz Python:
 PYTHONPATH=src python3 -m fundo_eleitoral.dashboard
 ```
 
-O painel usa uma fotografia dos dados públicos, sem identificadores pessoais.
-2026 está sinalizado como parcial. Confira os limites e as instruções de
-validação em [dashboard/README.md](dashboard/README.md).
+O painel usa uma fotografia datada dos dados públicos, sem identificadores
+pessoais. 2026 está sinalizado como parcial e não deve ser comparado como ciclo
+encerrado. A aba de território usa cadeiras em disputa como referência quando
+há um único cargo selecionado; com vários cargos, mostra apenas a referência
+descritiva do eleitorado. Confira os limites e as instruções de validação em
+[dashboard/README.md](dashboard/README.md).
 
 ### Pipeline Python
 
