@@ -126,7 +126,6 @@ export function Territory({
         Object.entries(regions).find(([, ufs]) => ufs.includes(row.uf))?.[0] ||
         '',
     }));
-  const reference = hasSeats ? 'cadeiras em disputa' : 'eleitorado';
   return (
     <div className="view-content">
       <div className="section-line">
@@ -205,12 +204,6 @@ export function Territory({
                   x={1}
                   stroke="#e94b20"
                   strokeWidth={2}
-                  label={{
-                    value: reference,
-                    position: 'top',
-                    fill: '#8e341d',
-                    fontSize: 11,
-                  }}
                 />
                 <Tooltip
                   cursor={{ fill: '#fff0e8' }}
