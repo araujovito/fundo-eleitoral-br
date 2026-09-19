@@ -53,18 +53,23 @@ recorrentes. Em 2022, incumbentes no mesmo cargo eram 4,0% das candidaturas a
 deputado federal e receberam 28,3% do FEFC; a média individual foi 12,5 vezes a
 de um nome novo no recorte. Método e limites em [renovacao.md](renovacao.md).
 
+**Quarto recorte: proporcionalidade racial.** Pessoas pretas e pardas eram
+50,3% das candidaturas em 2022 e receberam diretamente 36,6% do FEFC, diferença
+equivalente a R$ 671,4 milhões. Em 23 dos 24 partidos acima de R$ 20 milhões, a
+fatia direta ficou abaixo da participação negra nas candidaturas. O recorte não
+substitui auditoria de despesas partidárias compartilhadas. Método, fontes e
+limites em [raca.md](raca.md).
+
 ## O que pretendemos fazer
 
 Em ordem de interesse, não necessariamente de execução:
 
-1. **Proporcionalidade racial.** Mesmo método da cota de gênero, usando
-   `ds_cor_raca`, que já vem nas receitas.
-2. **Prioridade geográfica.** Quais UFs recebem acima do seu peso no
+1. **Prioridade geográfica.** Quais UFs recebem acima do seu peso no
    eleitorado — e se isso acompanha disputa apertada ou reduto consolidado.
-3. **Eficiência.** Reais por voto obtido, por partido e por perfil de
+2. **Eficiência.** Reais por voto obtido, por partido e por perfil de
    candidatura. Depende de ingerir os resultados
    (`votacao_candidato_munzona`), ainda fora do catálogo.
-4. **O caminho do dinheiro.** Repasse nacional → estadual → candidatura, com
+3. **O caminho do dinheiro.** Repasse nacional → estadual → candidatura, com
    as tabelas de órgãos partidários e de doador originário. É a parte mais
    difícil e a mais reveladora.
 

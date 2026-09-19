@@ -21,8 +21,9 @@ este projeto persegue é *onde* cada partido apostou o dinheiro:
 
 Ingestão completa nos três ciclos, dados publicados em
 [huggingface.co/datasets/buscafe/fundo-eleitoral-br](https://huggingface.co/datasets/buscafe/fundo-eleitoral-br)
-(27 tabelas, 364 MB, público). Três recortes de análise prontos: cota de gênero,
-concentração x pulverização e incumbentes x novos nomes.
+(27 tabelas, 364 MB, público). Quatro recortes de análise prontos: cota de
+gênero, concentração x pulverização, incumbentes x novos nomes e
+proporcionalidade racial.
 
 ### Achado: a cota de gênero não é uma regra de 30%
 
@@ -76,6 +77,22 @@ python -m fundo_eleitoral.renovacao --ano 2022 --por \
   --cargo "DEPUTADO FEDERAL"
 ```
 
+### Achado: candidaturas negras são metade, mas recebem 36,6%
+
+Em 2022, pessoas pretas e pardas representavam **50,3% das candidaturas**, mas
+receberam diretamente **36,6% do FEFC**. A diferença de 13,7 pontos percentuais
+equivale a R$ 671,4 milhões. Entre partidos com ao menos R$ 20 milhões de fundo,
+23 de 24 ficaram abaixo de sua proporção nos repasses diretos.
+
+A regra do TSE passou a valer em 2022, mas esta análise não é uma auditoria
+legal completa: despesas partidárias compartilhadas podem não aparecer como
+receita da candidatura. Veja fontes, método e limites em
+[docs/raca.md](docs/raca.md). Reproduz com:
+
+```bash
+python -m fundo_eleitoral.raca --ano 2022
+```
+
 ## Arquitetura em uma frase
 
 Ingestão baixa os ZIPs do TSE e escreve Parquet; a análise só lê Parquet, via
@@ -89,6 +106,7 @@ publicacao.py  sobe os Parquet para um dataset público no Hugging Face
 analise.py     consultas sobre os Parquet (lê do HF, não baixa nada)
 concentracao.py mede concentração do FEFC por partido, UF e cargo
 renovacao.py    compara FEFC de incumbentes, recorrentes e novos nomes
+raca.py         compara candidaturas negras e repasses diretos de FEFC
 dados/         ignorado pelo git (ADR-002)
 ```
 
