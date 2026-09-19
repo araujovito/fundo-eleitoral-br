@@ -160,7 +160,7 @@ export function Territory({
                 <CartesianGrid
                   strokeDasharray="3 5"
                   horizontal={false}
-                  stroke="#e4ebf1"
+                  stroke="#eadfd2"
                 />
                 <XAxis
                   type="number"
@@ -168,7 +168,7 @@ export function Territory({
                   tickFormatter={(value) => `${value}×`}
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 12, fill: '#62758a' }}
+                  tick={{ fontSize: 12, fill: '#776b61' }}
                 />
                 <YAxis
                   type="category"
@@ -176,29 +176,30 @@ export function Territory({
                   width={34}
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 13, fontWeight: 700, fill: '#29445d' }}
+                  tick={{ fontSize: 13, fontWeight: 700, fill: '#2b2520' }}
                 />
                 <ReferenceLine
                   x={1}
-                  stroke="#1c6673"
+                  stroke="#e94b20"
                   strokeWidth={2}
                   label={{
                     value: reference,
                     position: 'top',
-                    fill: '#39727c',
+                    fill: '#8e341d',
                     fontSize: 11,
                   }}
                 />
                 <Tooltip
-                  cursor={{ fill: '#eff5f7' }}
+                  cursor={{ fill: '#fff0e8' }}
                   formatter={(value, _name, item) => [
                     formatIndex(Number(value)),
                     `Fundo eleitoral ${money(Number(item.payload.value))} · ${item.payload.region}`,
                   ]}
                   labelFormatter={(label) => `UF: ${label}`}
                   contentStyle={{
-                    borderRadius: 9,
-                    border: '1px solid #d6e2e8',
+                    borderRadius: 0,
+                    border: '1px solid #241c17',
+                    background: '#fffaf3',
                   }}
                 />
                 <Bar
@@ -212,10 +213,10 @@ export function Territory({
                       key={row.uf}
                       fill={
                         row.plottedIndex > 1.1
-                          ? '#177d8b'
+                          ? '#d9461d'
                           : row.plottedIndex < 0.9
-                            ? '#b8c9dc'
-                            : '#74afb9'
+                            ? '#d9cabc'
+                            : '#f0a27f'
                       }
                     />
                   ))}
@@ -389,14 +390,14 @@ export function Representation({ cells }: { cells: Cell[] }) {
                   <Bar
                     dataKey="candidates"
                     name="Candidaturas"
-                    fill="#b6c8d9"
+                    fill="#cfc4b7"
                     radius={[0, 3, 3, 0]}
                     barSize={13}
                   />
                   <Bar
                     dataKey="funds"
-                    name="Fundo direto"
-                    fill="#177d8b"
+                    name="Fundo eleitoral"
+                    fill="#e94b20"
                     radius={[0, 3, 3, 0]}
                     barSize={13}
                   />
@@ -416,7 +417,7 @@ export function Representation({ cells }: { cells: Cell[] }) {
               <TableHead>RECORTE</TableHead>
               <TableHead>GRUPO</TableHead>
               <TableHead className="numeric">CANDIDATURAS</TableHead>
-              <TableHead className="numeric">FUNDO DIRETO</TableHead>
+              <TableHead className="numeric">FUNDO ELEITORAL</TableHead>
               <TableHead className="numeric">DIFERENÇA</TableHead>
             </TableRow>
           </TableHeader>
@@ -503,11 +504,13 @@ export function EfficiencyView({
     g.candidates += r.candidates;
     grouped.set(r.party, g);
   }
-  const rows = [...grouped.values()].sort(
-    (a, b) =>
-      (a.votes ? a.value / a.votes : Infinity) -
-      (b.votes ? b.value / b.votes : Infinity),
-  );
+  const rows = [...grouped.values()]
+    .filter((r) => r.value > 0)
+    .sort(
+      (a, b) =>
+        (a.votes ? a.value / a.votes : Infinity) -
+        (b.votes ? b.value / b.votes : Infinity),
+    );
   return (
     <div className="view-content">
       <div className="section-line">
@@ -528,7 +531,7 @@ export function EfficiencyView({
           <TableHeader>
             <TableRow>
               <TableHead>PARTIDO</TableHead>
-              <TableHead className="numeric">FUNDO DIRETO</TableHead>
+              <TableHead className="numeric">FUNDO ELEITORAL</TableHead>
               <TableHead className="numeric">VOTOS NOMINAIS</TableHead>
               <TableHead className="numeric">CANDIDATURAS</TableHead>
               <TableHead className="numeric">R$ / VOTO</TableHead>
@@ -564,9 +567,10 @@ export function EfficiencyView({
           </TableBody>
         </Table>
         <p className="chart-note">
-          Candidaturas sem votos continuam no numerador. Os resultados
-          eleitorais podem refletir revisões posteriores do TSE; esta é a versão
-          armazenada no projeto.
+          Partidos sem repasse direto no recorte não entram na ordenação.
+          Candidaturas sem votos continuam no numerador. Os resultados eleitorais
+          podem refletir revisões posteriores do TSE; esta é a versão armazenada
+          no projeto.
         </p>
       </Panel>
     </div>
@@ -741,7 +745,7 @@ export function FlowsView({
                 nodePadding={35}
                 nodeWidth={12}
                 margin={{ left: 20, right: 20, top: 10, bottom: 10 }}
-                link={{ stroke: '#78adb9', strokeOpacity: 0.35 }}
+                link={{ stroke: '#e94b20', strokeOpacity: 0.28 }}
                 node={({
                   x,
                   y,
@@ -763,7 +767,7 @@ export function FlowsView({
                       y={y}
                       width={width}
                       height={height}
-                      fill={index < sources.length ? '#234d73' : '#178292'}
+                      fill={index < sources.length ? '#241c17' : '#e94b20'}
                       rx={2}
                     />
                     <text
@@ -771,7 +775,7 @@ export function FlowsView({
                       y={y + height / 2}
                       textAnchor={index < sources.length ? 'start' : 'end'}
                       dominantBaseline="middle"
-                      fill="#284863"
+                      fill="#332820"
                       fontSize={12}
                     >
                       {payload.name}

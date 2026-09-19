@@ -999,6 +999,50 @@ th {
     width: 70px;
   }
 }
+
+/* Ajustes de revisão: a navegação deve expor as seções, não exigir uma barra
+   horizontal; gráficos secundários seguem a mesma linguagem da capa. */
+.navigation {
+  display: flex;
+  flex-wrap: wrap;
+  overflow: visible;
+  min-height: 0;
+  padding-bottom: 0;
+}
+.navigation [data-slot='tabs-trigger'] {
+  flex: 0 0 auto;
+  height: 44px;
+  padding-inline: 10px;
+}
+.tile-legend { color: #665a51; }
+.tile-legend .above { background: #d9461d; }
+.tile-legend .balanced { background: #f0a27f; }
+.tile-legend .below { background: #d9cabc; }
+.index-pill { background: #eee3d6; color: #665a51; border-radius: 0; }
+.index-pill.positive { background: #fff0e8; color: #a63518; }
+.territory-insight {
+  background: #241c17;
+  border: 0;
+  border-top: 7px solid #e94b20;
+  border-radius: 0;
+}
+.territory-insight .map-icon, .territory-insight .eyebrow { color: #ff855d; }
+.territory-insight h2, .territory-insight strong { color: #fff8ee; }
+.territory-insight p { color: #daccc0; }
+.territory-insight small { color: #bfae9f; }
+.territory-insight .insight-divider { background: #5f4e42; }
+.method-card > span { color: #d9461d; }
+
+@media (max-width: 760px) {
+  .navigation { flex-wrap: nowrap; overflow-x: auto; }
+  .navigation [data-slot='tabs-trigger'] { height: 42px; }
+}
+
+@media (min-width: 761px) and (max-width: 1100px) {
+  .navigation { flex-wrap: nowrap; }
+  .navigation [data-slot='tabs-trigger'] { padding-inline: 8px; font-size: 12px; }
+  .navigation [data-slot='tabs-trigger'] svg { display: none; }
+}
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;
