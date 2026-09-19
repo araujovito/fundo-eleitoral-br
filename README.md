@@ -26,7 +26,8 @@ Ingestão completa nos três ciclos, dados publicados em
 [huggingface.co/datasets/buscafe/fundo-eleitoral-br](https://huggingface.co/datasets/buscafe/fundo-eleitoral-br)
 (27 tabelas, 364 MB, público). Quatro recortes de análise prontos: cota de
 gênero, concentração x pulverização, incumbentes x novos nomes e
-proporcionalidade racial, prioridade geográfica e eficiência eleitoral.
+proporcionalidade racial, prioridade geográfica, eficiência eleitoral e o
+caminho do dinheiro entre diretórios e candidaturas.
 
 ### Achado: a cota de gênero não é uma regra de 30%
 
@@ -78,6 +79,16 @@ legenda não entra porque não é atribuível a uma candidatura.
 ```bash
 python -m fundo_eleitoral.eficiencia --ano 2022
 python -m fundo_eleitoral.eficiencia --ano 2022 --por partido cargo --minimo-milhoes 20
+```
+
+### O caminho do dinheiro: fluxos declarados, não dupla contagem
+
+`fundo_eleitoral.fluxos` mostra os repasses declarados entre diretórios
+nacionais, estaduais/distritais, municipais e candidaturas. Uma cadeia produz
+arestas em cada etapa; elas não são somadas como dinheiro novo.
+
+```bash
+python -m fundo_eleitoral.fluxos --ano 2022 --partido PDT --minimo-milhoes 1
 ```
 
 ### Achado: o FEFC ficou mais pulverizado nas chapas federais
@@ -148,6 +159,7 @@ renovacao.py    compara FEFC de incumbentes, recorrentes e novos nomes
 raca.py         compara candidaturas negras e repasses diretos de FEFC
 geografia.py    compara FEFC por UF com o peso de cada UF no eleitorado
 eficiencia.py    mede FEFC direto por voto nominal e resultado eleitoral
+fluxos.py        mostra repasses declarados entre diretórios e candidaturas
 dados/          ignorado, exceto dimensões pequenas versionadas (ADR-002)
 ```
 
