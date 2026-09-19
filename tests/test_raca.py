@@ -24,16 +24,18 @@ def _gravar_base_sintetica(raiz):
     """)
     con.sql("""
         CREATE TABLE rec AS SELECT * FROM (VALUES
-          ('1', 'FUNDO ESPECIAL', '20,00'),
-          ('1', 'FUNDO ESPECIAL', '20,00'),
-          ('2', 'FUNDO ESPECIAL', '10,00'),
-          ('3', 'FUNDO ESPECIAL', '50,00'),
-          ('5', 'FUNDO ESPECIAL', '999,00'),
-          ('6', 'FUNDO ESPECIAL', '100,00'),
-          ('7', 'FUNDO ESPECIAL', '20,00'),
-          ('8', 'FUNDO ESPECIAL', '80,00'),
-          ('2', 'OUTROS RECURSOS', '500,00')
-        ) t(sq_candidato, ds_fonte_receita, vr_receita)
+          ('1', 'FUNDO ESPECIAL', 'Recursos de partido político', '20,00'),
+          ('1', 'FUNDO ESPECIAL', 'Recursos de partido político', '20,00'),
+          ('2', 'FUNDO ESPECIAL', 'Recursos de partido político', '10,00'),
+          ('3', 'FUNDO ESPECIAL', 'Recursos de partido político', '50,00'),
+          ('5', 'FUNDO ESPECIAL', 'Recursos de partido político', '999,00'),
+          ('6', 'FUNDO ESPECIAL', 'Recursos de partido político', '100,00'),
+          ('7', 'FUNDO ESPECIAL', 'Recursos de partido político', '20,00'),
+          ('8', 'FUNDO ESPECIAL', 'Recursos de partido político', '80,00'),
+          ('2', 'OUTROS RECURSOS', 'Recursos de pessoas físicas', '500,00'),
+          -- FEFC vindo de outra candidatura: ja contado no repasse do partido
+          ('1', 'FUNDO ESPECIAL', 'Recursos de outros candidatos', '300,00')
+        ) t(sq_candidato, ds_fonte_receita, ds_origem_receita, vr_receita)
     """)
     con.execute(f"COPY cand TO '{pasta / 'consulta_cand.parquet'}' (FORMAT PARQUET)")
     con.execute(f"COPY rec TO '{pasta / 'receitas_candidatos.parquet'}' (FORMAT PARQUET)")
@@ -116,3 +118,17 @@ def test_padrao_inclui_inaptas_e_filtro_pode_ser_ligado(tmp_path):
         if linha.partido == "P"
     )
     assert filtrado.fefc_milhoes == pytest.approx(0.0001)
+
+
+def test_ignora_fefc_repassado_por_outra_candidatura(tmp_path):
+    _gravar_base_sintetica(tmp_path)
+
+    linhas = proporcionalidade_racial(2022, raiz=tmp_path, minimo_reais=1)
+    partido = next(x for x in linhas if x.partido == "P")
+
+    # O fixture tem R$ 200 repassados pelo partido e mais R$ 300 que uma
+    # candidatura recebeu de outra. Estes ultimos ja sairam do bolso do
+    # partido antes e nao podem ser contados de novo (ADR-009) -- e como o
+    # fluxo e enviesado, inclui-los deslocaria tambem a composicao racial,
+    # nao so o total.
+    assert partido.fefc_milhoes * 1e6 == pytest.approx(200.0)

@@ -213,4 +213,9 @@ Efeito na medida: 2018 passa de 26,7% para 27,6%; 2022, de 30,8% para 31,0%;
 PCdoB, ambos marginais), e o corte de R$ 20 mi passa a excluir um partido que
 só alcançava o limite graças ao repasse — daí 23 partidos onde antes eram 24.
 
-**Pendência:** `raca.py` e `renovacao.py` ainda não aplicam a exclusão.
+**Aplicado em todo o projeto.** `analise.py`, `concentracao.py`, `raca.py` e
+`renovacao.py` usam a mesma definição. Efeito nos recortes já publicados:
+repasse a candidaturas negras em 2022 passa de 36,6% para 36,5% (defasagem de
+R$ 671,4 mi para R$ 654,4 mi, e de 23 de 24 partidos abaixo para 21 de 23);
+a razão incumbente/novo a deputado federal sobe de 12,5x para 12,7x, porque o
+repasse entre candidaturas favorecia proporcionalmente os novos nomes.

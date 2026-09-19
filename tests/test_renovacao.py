@@ -43,16 +43,18 @@ def _gravar_base_sintetica(raiz):
     """)
     con.sql("""
         CREATE TABLE rec AS SELECT * FROM (VALUES
-          ('c1', 'FUNDO ESPECIAL', '60,00'),
-          ('c1', 'FUNDO ESPECIAL', '40,00'),
-          ('c2', 'FUNDO ESPECIAL', '50,00'),
-          ('c3', 'FUNDO ESPECIAL', '25,00'),
-          ('c4', 'FUNDO ESPECIAL', '10,00'),
-          ('c5', 'FUNDO ESPECIAL', '5,00'),
-          ('c6', 'FUNDO ESPECIAL', '4,00'),
-          ('c8', 'FUNDO ESPECIAL', '20,00'),
-          ('c4', 'OUTROS RECURSOS', '999,00')
-        ) t(sq_candidato, ds_fonte_receita, vr_receita)
+          ('c1', 'FUNDO ESPECIAL', 'Recursos de partido político', '60,00'),
+          ('c1', 'FUNDO ESPECIAL', 'Recursos de partido político', '40,00'),
+          ('c2', 'FUNDO ESPECIAL', 'Recursos de partido político', '50,00'),
+          ('c3', 'FUNDO ESPECIAL', 'Recursos de partido político', '25,00'),
+          ('c4', 'FUNDO ESPECIAL', 'Recursos de partido político', '10,00'),
+          ('c5', 'FUNDO ESPECIAL', 'Recursos de partido político', '5,00'),
+          ('c6', 'FUNDO ESPECIAL', 'Recursos de partido político', '4,00'),
+          ('c8', 'FUNDO ESPECIAL', 'Recursos de partido político', '20,00'),
+          ('c4', 'OUTROS RECURSOS', 'Recursos de pessoas físicas', '999,00'),
+          -- FEFC repassado por outra candidatura, ja contado uma vez
+          ('c1', 'FUNDO ESPECIAL', 'Recursos de outros candidatos', '500,00')
+        ) t(sq_candidato, ds_fonte_receita, ds_origem_receita, vr_receita)
     """)
     con.execute(f"COPY cand_anterior TO '{anterior / 'consulta_cand.parquet'}' (FORMAT PARQUET)")
     con.execute(f"COPY cand_atual TO '{atual / 'consulta_cand.parquet'}' (FORMAT PARQUET)")
@@ -128,3 +130,16 @@ def test_rejeita_ano_sem_ciclo_anterior_e_dimensao_invalida(tmp_path):
         distribuicao_renovacao(2018, raiz=tmp_path)
     with pytest.raises(ValueError, match="dimensoes invalidas"):
         distribuicao_renovacao(2022, raiz=tmp_path, por=("genero",))
+
+
+def test_repasse_entre_candidaturas_nao_engorda_o_perfil_que_recebeu(tmp_path):
+    _gravar_base_sintetica(tmp_path)
+
+    linhas = distribuicao_renovacao(2022, raiz=tmp_path, cargos=("deputado federal",))
+    por_perfil = {linha.perfil: linha for linha in linhas}
+
+    # Sem a exclusao, os R$ 500 que c1 recebeu de outra candidatura entrariam
+    # no balde de incumbentes e inflariam justamente o indice que a analise
+    # quer estimar -- o vies a favor de quem ja tem mandato (ADR-009).
+    assert por_perfil[INCUMBENTE_MESMO_CARGO].metricas.total_fefc == 100
+    assert sum(x.metricas.total_fefc for x in linhas) == 194

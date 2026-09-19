@@ -20,6 +20,10 @@ import duckdb
 from .analise import HF
 
 _VALOR = "CAST(replace(vr_receita, ',', '.') AS DOUBLE)"
+# FEFC que chega a uma candidatura vindo de outra ja foi contado quando o
+# partido o repassou, e o fluxo e enviesado (75% vai para homens, contra 69%
+# do fundo como um todo em 2022). Ver ADR-009.
+_SO_REPASSE_DIRETO = "AND ds_origem_receita <> 'Recursos de outros candidatos'"
 _DIMENSOES = {"partido": 0, "uf": 1, "cargo": 2}
 _ANTERIOR = {2022: 2018, 2026: 2022}
 
@@ -149,7 +153,7 @@ def distribuicao_renovacao(
         fefc AS (
           SELECT sq_candidato, sum({_VALOR}) AS valor
           FROM '{receitas}'
-          WHERE ds_fonte_receita = 'FUNDO ESPECIAL'
+          WHERE ds_fonte_receita = 'FUNDO ESPECIAL' {_SO_REPASSE_DIRETO}
           GROUP BY 1
         )
         SELECT a.partido, a.uf, a.cargo, coalesce(f.valor, 0.0) AS valor,

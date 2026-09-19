@@ -20,6 +20,10 @@ import duckdb
 from .analise import HF
 
 _VALOR = "CAST(replace(vr_receita, ',', '.') AS DOUBLE)"
+# FEFC que chega a uma candidatura vindo de outra ja foi contado quando o
+# partido o repassou, e o fluxo e enviesado (75% vai para homens, contra 69%
+# do fundo como um todo em 2022). Ver ADR-009.
+_SO_REPASSE_DIRETO = "AND ds_origem_receita <> 'Recursos de outros candidatos'"
 RACAS_NEGRAS = ("PRETA", "PARDA")
 
 
@@ -94,7 +98,7 @@ def proporcionalidade_racial(
         fefc AS (
           SELECT sq_candidato, sum({_VALOR}) AS valor
           FROM '{rec}'
-          WHERE ds_fonte_receita = 'FUNDO ESPECIAL'
+          WHERE ds_fonte_receita = 'FUNDO ESPECIAL' {_SO_REPASSE_DIRETO}
           GROUP BY 1
         ),
         base AS (
@@ -154,7 +158,7 @@ def total_nacional(
         fefc AS (
           SELECT sq_candidato, sum({_VALOR}) AS valor
           FROM '{rec}'
-          WHERE ds_fonte_receita = 'FUNDO ESPECIAL'
+          WHERE ds_fonte_receita = 'FUNDO ESPECIAL' {_SO_REPASSE_DIRETO}
           GROUP BY 1
         )
         SELECT sum(coalesce(f.valor, 0)) / 1e6,

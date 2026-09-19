@@ -19,6 +19,9 @@ este projeto persegue é *onde* cada partido apostou o dinheiro:
 
 ## Estado atual
 
+Todos os recortes medem o FEFC **repassado diretamente pelo partido**;
+transferência entre candidaturas fica fora ([ADR-009](docs/decisoes.md)).
+
 Ingestão completa nos três ciclos, dados publicados em
 [huggingface.co/datasets/buscafe/fundo-eleitoral-br](https://huggingface.co/datasets/buscafe/fundo-eleitoral-br)
 (27 tabelas, 364 MB, público). Quatro recortes de análise prontos: cota de
@@ -68,11 +71,11 @@ python -m fundo_eleitoral.concentracao --ano 2022 --por uf cargo \
   --cargo "DEPUTADO FEDERAL" --minimo-milhoes 1 --minimo-candidaturas 10
 ```
 
-### Achado: incumbentes recebem 12,5 vezes mais que novos nomes
+### Achado: incumbentes recebem 12,7 vezes mais que novos nomes
 
 Nas candidaturas a deputado federal de 2022, quem havia sido eleito para o
-mesmo cargo em 2018 representava **4,0% dos candidatos, mas recebeu 28,3% do
-FEFC**. A média foi de R$ 1,739 milhão por incumbente contra R$ 139 mil por nome
+mesmo cargo em 2018 representava **4,0% dos candidatos, mas recebeu 28,5% do
+FEFC**. A média foi de R$ 1,734 milhão por incumbente contra R$ 137 mil por nome
 ausente do ciclo anterior.
 
 A classificação usa CPF e o resultado da eleição anterior; portanto não
@@ -84,17 +87,15 @@ python -m fundo_eleitoral.renovacao --ano 2022 --por \
   --cargo "DEPUTADO FEDERAL"
 ```
 
-### Achado: candidaturas negras são metade, mas recebem 36,6%
-
-> Nota: este recorte e o de renovação ainda somam o repasse entre candidaturas,
-> que o [ADR-009](docs/decisoes.md) exclui. O efeito na composição racial é de
-> 1 a 2 pontos percentuais, mas infla o total do fundo em 3,4% (2022).
-> Pendência aberta.
+### Achado: candidaturas negras são metade, mas recebem 36,5%
 
 Em 2022, pessoas pretas e pardas representavam **50,3% das candidaturas**, mas
-receberam diretamente **36,6% do FEFC**. A diferença de 13,7 pontos percentuais
-equivale a R$ 671,4 milhões. Entre partidos com ao menos R$ 20 milhões de fundo,
-23 de 24 ficaram abaixo de sua proporção nos repasses diretos.
+receberam diretamente **36,5% do FEFC**. A diferença de 13,8 pontos percentuais
+equivale a R$ 654,4 milhões. Entre partidos com ao menos R$ 20 milhões de fundo,
+21 de 23 ficaram abaixo de sua proporção nos repasses diretos.
+
+Em 2018, antes de a regra valer, a defasagem era muito maior: 46,5% das
+candidaturas contra 23,5% do repasse.
 
 A regra do TSE passou a valer em 2022, mas esta análise não é uma auditoria
 legal completa: despesas partidárias compartilhadas podem não aparecer como
