@@ -67,7 +67,9 @@ def cte_fefc(caminho_receitas: str, incluir_repasse_entre_candidatos: bool = Fal
     """
     repasse = (
         "" if incluir_repasse_entre_candidatos
-        else f"AND ds_origem_receita <> '{ORIGEM_REPASSE}'"
+        # IS DISTINCT FROM, ao contrario de <>, tambem preserva linhas cujo
+        # campo de origem esteja nulo. Elas nao sao repasse entre candidaturas.
+        else f"AND ds_origem_receita IS DISTINCT FROM '{ORIGEM_REPASSE}'"
     )
     return f"""fefc AS (
           SELECT sq_candidato, sum({VALOR}) AS valor

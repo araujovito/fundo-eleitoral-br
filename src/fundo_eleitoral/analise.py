@@ -15,7 +15,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import duckdb
-from .consulta import FONTE_FEFC, HF, ORIGEM_REPASSE, VALOR, caminho, tem_candidaturas_aptas
+
+from .consulta import FONTE_FEFC, HF, ORIGEM_REPASSE, VALOR, caminho
 
 # Dataset publico gerado por este projeto; a analise roda sem ingestao local.
 

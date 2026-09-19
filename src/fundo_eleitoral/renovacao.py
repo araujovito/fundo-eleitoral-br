@@ -16,8 +16,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import duckdb
-from .consulta import HF, VALOR, caminho, cte_fefc, clausula_aptidao
 
+from .consulta import HF, caminho, clausula_aptidao, cte_fefc
 
 _DIMENSOES = {"partido": 0, "uf": 1, "cargo": 2}
 _ANTERIOR = {2022: 2018, 2026: 2022}

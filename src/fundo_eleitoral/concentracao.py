@@ -20,8 +20,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import duckdb
-from .consulta import HF, VALOR, caminho, cte_fefc, clausula_aptidao
 
+from .consulta import HF, caminho, clausula_aptidao, cte_fefc
 
 _DIMENSOES = {"uf": "uf", "cargo": "cargo"}
 
