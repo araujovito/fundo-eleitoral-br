@@ -24,7 +24,8 @@ transferência entre candidaturas fica fora ([ADR-009](docs/decisoes.md)).
 
 Ingestão completa nos três ciclos, dados publicados em
 [huggingface.co/datasets/buscafe/fundo-eleitoral-br](https://huggingface.co/datasets/buscafe/fundo-eleitoral-br)
-(27 tabelas mais as dimensões de eleitorado e votos, público). Quatro recortes de análise prontos: cota de
+(27 tabelas mais as dimensões derivadas de eleitorado e votos, 364 MB,
+público). Sete recortes de análise prontos: cota de
 gênero, concentração x pulverização, incumbentes x novos nomes e
 proporcionalidade racial, prioridade geográfica, eficiência eleitoral e o
 caminho do dinheiro entre diretórios e candidaturas.
@@ -185,6 +186,31 @@ dados/          ignorado, exceto dimensões pequenas versionadas (ADR-002)
 ```
 
 ## Rodando
+
+### Dashboard
+
+O diretório `dashboard/` contém o Observatório do Fundo Eleitoral: seis abas
+interativas com visão geral, território, representatividade, eficiência,
+fluxos e metodologia. Inclui filtros por ciclo, partido e cargo, tabelas
+pesquisáveis, gráficos e download dos agregados.
+
+```bash
+cd dashboard
+pnpm install
+pnpm dev
+```
+
+Para atualizar os agregados, execute na raiz Python:
+
+```bash
+PYTHONPATH=src python3 -m fundo_eleitoral.dashboard
+```
+
+O painel usa uma fotografia dos dados públicos, sem identificadores pessoais.
+2026 está sinalizado como parcial. Confira os limites e as instruções de
+validação em [dashboard/README.md](dashboard/README.md).
+
+### Pipeline Python
 
 O projeto foi desenhado para rodar em ambiente efêmero na nuvem (Codespaces ou
 Colab), sem ocupar disco local. Há um `.devcontainer` pronto.
