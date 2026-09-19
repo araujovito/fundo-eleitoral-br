@@ -136,3 +136,25 @@ resultado. Encadeado, o caminho barato e o caminho correto são o mesmo.
 **Público, não privado:** o dado é público de origem, e um dataset aberto torna
 a análise reproduzível sem exigir que terceiros refaçam a ingestão — que é
 justamente a parte cara e cheia de armadilhas.
+
+## ADR-008 — Conversão em fluxo, não em memória
+
+**Contexto.** A primeira versão usava `pl.read_csv` + `write_parquet`, que
+materializa a tabela inteira na RAM. Num Codespaces de 8 GB o processo foi
+morto pelo sistema (`Terminated`) ao chegar em
+`despesas_contratadas_candidatos_2022` — 2,2 milhões de linhas e 53 colunas,
+todas string.
+
+**Decisão.** `pl.scan_csv(...).sink_parquet(...)`: o arquivo é processado em
+lotes e nunca existe inteiro em memória. Medido na maior tabela do pacote de
+2022: pico de **2,3 GB**.
+
+**Consequência de encoding.** `scan_csv` só aceita UTF-8, enquanto o TSE
+publica em latin-1 — era o `read_csv` que fazia essa conversão. A transcodificação
+passou a acontecer durante a extração do ZIP, também em blocos. Latin-1 é de
+byte único, então qualquer corte de bloco cai numa fronteira válida; o mesmo
+truque seria incorreto se a entrada fosse UTF-8.
+
+**Também:** a conversão passou a pular tabelas já convertidas. Depois de um
+processo morto no meio, reexecutar retoma de onde parou em vez de refazer o
+que já estava pronto.

@@ -13,7 +13,6 @@ Uso:
 from __future__ import annotations
 
 import argparse
-import shutil
 import sys
 import zipfile
 from pathlib import Path
@@ -83,17 +82,43 @@ def baixar(fonte: Fonte, destino: Path) -> Path:
     return alvo
 
 
-def _ler_csv(caminho: Path) -> pl.DataFrame:
-    """Le um CSV do TSE ja normalizando o dialeto (latin-1, ';')."""
-    df = pl.read_csv(
+def _transcrever(origem, destino, bloco: int = 1 << 20) -> None:
+    """Copia latin-1 -> utf-8 em blocos.
+
+    `scan_csv` so le utf-8, e converter na extracao evita uma segunda passada
+    pelo arquivo. Latin-1 e de byte unico, entao qualquer corte de bloco cai
+    numa fronteira de caractere valida -- nao ha risco de partir um caractere
+    ao meio, como haveria com utf-8 na entrada.
+    """
+    while pedaco := origem.read(bloco):
+        destino.write(pedaco.decode(DIALETO_TSE["encoding"]).encode("utf-8"))
+
+
+def _converter_csv(caminho: Path, alvo: Path) -> tuple[int, int]:
+    """Converte um CSV do TSE para Parquet em fluxo, sem carrega-lo inteiro.
+
+    `scan_csv` + `sink_parquet` processam o arquivo em lotes. A primeira versao
+    usava `read_csv`, que materializa tudo na RAM: o processo era morto pelo
+    sistema em `despesas_contratadas_candidatos_2022`, a maior tabela do
+    pacote, numa maquina de 8 GB. Ver ADR-008.
+    """
+    lf = pl.scan_csv(
         caminho,
         separator=DIALETO_TSE["separator"],
-        encoding=DIALETO_TSE["encoding"],
+        encoding="utf8",  # ja transcodificado na extracao; scan_csv so aceita utf8
         null_values=DIALETO_TSE["null_values"],
-        infer_schema_length=0,  # tudo como string; tipagem e decisao da etapa 2
+        infer_schema_length=0,  # tudo string; tipagem e decisao da etapa 2
         truncate_ragged_lines=True,
     )
-    return df.rename({c: c.strip().lower() for c in df.columns})
+    nomes = lf.collect_schema().names()  # so o cabecalho, nao le os dados
+    lf = lf.rename({c: c.strip().lower() for c in nomes})
+    lf.sink_parquet(alvo, compression="zstd")
+
+    # Contagem vem dos metadados do Parquet: nao custa releitura.
+    import pyarrow.parquet as pq
+
+    md = pq.ParquetFile(alvo).metadata
+    return md.num_rows, md.num_columns
 
 
 def converter(zip_path: Path, fonte: Fonte, destino: Path) -> list[Path]:
@@ -116,15 +141,23 @@ def converter(zip_path: Path, fonte: Fonte, destino: Path) -> list[Path]:
                 print(f"  aviso: {alvo_csv} nao esta em {zip_path.name}")
                 continue
 
-            tmp = destino / "_tmp.csv"
-            with z.open(membro) as origem, tmp.open("wb") as saida:
-                shutil.copyfileobj(origem, saida)
-            df = _ler_csv(tmp)
-            tmp.unlink()
-
             alvo = destino / f"{tabela}.parquet"
-            df.write_parquet(alvo, compression="zstd")
-            print(f"  {alvo.name}: {df.height:,} linhas x {df.width} colunas".replace(",", "."))
+            if alvo.exists():
+                print(f"  {alvo.name}: ja convertido")
+                escritos.append(alvo)
+                continue
+
+            # O CSV e extraido para disco em vez de ficar em memoria: os
+            # maiores passam de 1 GB descompactados.
+            tmp = destino / f"_tmp_{tabela}.csv"
+            with z.open(membro) as origem, tmp.open("wb") as saida:
+                _transcrever(origem, saida)
+            try:
+                linhas, colunas = _converter_csv(tmp, alvo)
+            finally:
+                tmp.unlink(missing_ok=True)
+
+            print(f"  {alvo.name}: {linhas:,} linhas x {colunas} colunas".replace(",", "."))
             escritos.append(alvo)
 
     return escritos
