@@ -26,7 +26,7 @@ Ingestão completa nos três ciclos, dados publicados em
 [huggingface.co/datasets/buscafe/fundo-eleitoral-br](https://huggingface.co/datasets/buscafe/fundo-eleitoral-br)
 (27 tabelas, 364 MB, público). Quatro recortes de análise prontos: cota de
 gênero, concentração x pulverização, incumbentes x novos nomes e
-proporcionalidade racial.
+proporcionalidade racial e prioridade geográfica.
 
 ### Achado: a cota de gênero não é uma regra de 30%
 
@@ -54,6 +54,19 @@ Reproduz com `python -m fundo_eleitoral.analise` — lê direto do Hugging Face,
 sem ingestão local. Ver
 [docs/decisoes.md](docs/decisoes.md) para as decisões de arquitetura e as
 pendências conhecidas.
+
+### Prioridade geográfica: comparar fundo e eleitorado
+
+`fundo_eleitoral.geografia` compara, para cada UF, a sua fatia no FEFC direto
+com a sua fatia no eleitorado oficial do TSE. O `índice de prioridade` é a
+razão entre essas duas participações: 1,00x equivale ao peso eleitoral; 2,00x
+significa o dobro dele. Candidaturas nacionais (`SG_UF = BR`) ficam fora, pois
+atribuir sua receita a estados seria uma suposição sem base nos dados.
+
+```bash
+python -m fundo_eleitoral.geografia --ano 2022
+python -m fundo_eleitoral.geografia --ano 2022 --por-partido --minimo-milhoes 20
+```
 
 ### Achado: o FEFC ficou mais pulverizado nas chapas federais
 
@@ -121,7 +134,8 @@ analise.py     consultas sobre os Parquet (lê do HF, não baixa nada)
 concentracao.py mede concentração do FEFC por partido, UF e cargo
 renovacao.py    compara FEFC de incumbentes, recorrentes e novos nomes
 raca.py         compara candidaturas negras e repasses diretos de FEFC
-dados/         ignorado pelo git (ADR-002)
+geografia.py    compara FEFC por UF com o peso de cada UF no eleitorado
+dados/          ignorado, exceto dimensões pequenas versionadas (ADR-002)
 ```
 
 ## Rodando

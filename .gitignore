@@ -3,6 +3,8 @@
 *.zip
 *.csv
 *.parquet
+!/dados/
+!/dados/dimensoes/
 !/dados/dimensoes/*.parquet
 
 __pycache__/
