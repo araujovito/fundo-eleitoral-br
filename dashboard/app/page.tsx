@@ -211,7 +211,7 @@ export function Ranking({
           <CartesianGrid
             strokeDasharray="3 5"
             horizontal={false}
-            stroke="#e7ecf1"
+            stroke="#eadfd2"
           />
           <XAxis
             type="number"
@@ -220,7 +220,7 @@ export function Ranking({
             }
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 12, fill: '#68788a' }}
+            tick={{ fontSize: 12, fill: '#776b61' }}
           />
           <YAxis
             dataKey="name"
@@ -228,14 +228,18 @@ export function Ranking({
             width={98}
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 12, fill: '#36465b' }}
+            tick={{ fontSize: 12, fill: '#2b2520' }}
           />
           <Tooltip
-            cursor={{ fill: '#f1f5f9' }}
+            cursor={{ fill: '#fff0e8' }}
             formatter={(v) =>
               metric === 'value' ? money(Number(v)) : `${Number(v).toFixed(2)}×`
             }
-            contentStyle={{ borderRadius: 10, border: '1px solid #dae3ea' }}
+            contentStyle={{
+              borderRadius: 0,
+              border: '1px solid #241c17',
+              background: '#fffaf3',
+            }}
           />
           <Bar
             dataKey="value"
@@ -427,10 +431,10 @@ export default function Home() {
             <div className="eyebrow">
               FINANCIAMENTO DA DEMOCRACIA · DADOS TSE
             </div>
-            <h1>Para onde vai o fundo eleitoral?</h1>
+            <h1>A festa também tem orçamento.</h1>
             <p>
-              Um guia para ler as escolhas de financiamento dos partidos
-              brasileiros.
+              Veja para onde vai o dinheiro público que financia as campanhas
+              no Brasil.
             </p>
           </div>
           <div className="edition">
@@ -508,14 +512,14 @@ export default function Home() {
               <div className="story-main">
                 <div>
                   <h2 id="leitura-titulo">
-                    O dinheiro não se distribui sozinho.
+                    Quem recebe mais, decide mais espaço na campanha.
                   </h2>
                   <p>
                     Em {year}
                     {year === '2026' ? ', com dados ainda parciais,' : ''} as
                     candidaturas receberam <b>{money(total)}</b> em repasses
-                    diretos do fundo eleitoral. Os números abaixo ajudam a separar regra
-                    eleitoral, escala partidária e decisão de alocação.
+                    diretos do fundo eleitoral. Esta é uma leitura das escolhas
+                    de distribuição — não só do tamanho dos partidos.
                   </p>
                 </div>
                 <div className="story-number">
@@ -638,17 +642,17 @@ export default function Home() {
                               >
                                 <stop
                                   offset="0%"
-                                  stopColor="#25828e"
+                                  stopColor="#f05a28"
                                   stopOpacity={0.25}
                                 />
                                 <stop
                                   offset="100%"
-                                  stopColor="#25828e"
+                                  stopColor="#f05a28"
                                   stopOpacity={0}
                                 />
                               </linearGradient>
                             </defs>
-                            <CartesianGrid vertical={false} stroke="#edf0f4" />
+                            <CartesianGrid vertical={false} stroke="#eadfd2" />
                             <XAxis
                               dataKey="name"
                               axisLine={false}
@@ -667,13 +671,13 @@ export default function Home() {
                               type="linear"
                               dataKey="value"
                               name="Fundo eleitoral direto"
-                              stroke="#167d8d"
+                              stroke="#d9461d"
                               strokeWidth={2.5}
                               fill="url(#area)"
                               dot={{
                                 r: 4,
-                                fill: '#167d8d',
-                                stroke: 'white',
+                                fill: '#d9461d',
+                                stroke: '#fffaf3',
                                 strokeWidth: 2,
                               }}
                             />
