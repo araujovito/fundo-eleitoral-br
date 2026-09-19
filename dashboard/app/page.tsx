@@ -12,6 +12,20 @@ import { Territory, Representation, EfficiencyView, FlowsView, Method } from '@/
 
 const views = [['overview', 'Visão geral', ChartNoAxesCombined], ['territory', 'Território', MapPin], ['representation', 'Representatividade', Users], ['efficiency', 'Eficiência', Vote], ['flows', 'Caminho do dinheiro', Network], ['method', 'Metodologia', CircleHelp]] as const;
 
+// Paleta inspirada nas marcas partidárias. A cor identifica a sigla; o comprimento
+// da barra continua sendo a única codificação do volume de recursos.
+const PARTY_COLORS: Record<string, string> = {
+  'AGIR': '#f58220', 'AVANTE': '#f58220', 'CIDADANIA': '#ed1c24', 'DC': '#f4b400',
+  'MDB': '#1d7b4f', 'NOVO': '#f58220', 'PCDOB': '#c21f32', 'PCO': '#d71920',
+  'PCB': '#d71920', 'PDT': '#ed1c24', 'PL': '#1f4c9a', 'PMB': '#b51f6b',
+  'PMN': '#ef7f1a', 'PODE': '#00a3e0', 'PP': '#0067a5', 'PROS': '#d71920',
+  'PRTB': '#103d78', 'PSB': '#f2b705', 'PSC': '#1d4f91', 'PSD': '#16844b',
+  'PSDB': '#0b6db3', 'PSOL': '#f05a28', 'PSTU': '#c21f32', 'PT': '#e5242a',
+  'PTB': '#1d4f91', 'PV': '#269e43', 'REDE': '#15934a', 'REPUBLICANOS': '#2457a6',
+  'SOLIDARIEDADE': '#e5252a', 'UNIÃO': '#1557a0', 'UP': '#b51f6b',
+};
+const partyColor = (party: string) => PARTY_COLORS[party] || '#5c7892';
+
 function Filter({ label, value, values, onChange }: { label: string; value: string; values: string[]; onChange: (v: string) => void }) {
   return <div className="filter"><span>{label}</span><Select value={value} onValueChange={v => v && onChange(v)}><SelectTrigger aria-label={label}><SelectValue>{value}</SelectValue></SelectTrigger><SelectContent>{values.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>;
 }
@@ -22,7 +36,7 @@ function Stat({ label, value, note, icon: Icon, accent = false }: { label: strin
   return <article className={`stat ${accent ? 'accent-stat' : ''}`}><div className="stat-label">{label}<Icon size={19}/></div><strong>{value}</strong><p>{note}</p></article>;
 }
 export function Ranking({ rows, metric = 'value' }: {rows: {name: string; value: number}[]; metric?: 'value' | 'index'}) {
-  return <div className="chart" role="img" aria-label="Ranking em barras; valores disponíveis na tabela"><ResponsiveContainer width="100%" height={340}><BarChart layout="vertical" data={rows.slice(0, 10)} margin={{top: 4, right: 36, left: 0, bottom: 0}}><CartesianGrid strokeDasharray="3 5" horizontal={false} stroke="#e7ecf1"/><XAxis type="number" tickFormatter={v => metric === 'value' ? money(v, false) : `${v}×`} axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#68788a'}}/><YAxis dataKey="name" type="category" width={98} axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#36465b'}}/><Tooltip cursor={{fill: '#f1f5f9'}} formatter={v => metric === 'value' ? money(Number(v)) : `${Number(v).toFixed(2)}×`} contentStyle={{borderRadius: 10, border: '1px solid #dae3ea'}}/><Bar dataKey="value" name={metric === 'value' ? 'FEFC direto' : 'Índice'} radius={[0, 4, 4, 0]} barSize={15}>{rows.slice(0, 10).map((r, i) => <ChartCell key={r.name} fill={i === 0 ? '#167d8d' : i < 3 ? '#234c78' : '#6d90b3'}/>)}</Bar></BarChart></ResponsiveContainer></div>;
+  return <div className="chart" role="img" aria-label="Ranking em barras; cada barra usa a cor de identidade visual do partido e os valores estão disponíveis na tabela"><ResponsiveContainer width="100%" height={340}><BarChart layout="vertical" data={rows.slice(0, 10)} margin={{top: 4, right: 36, left: 0, bottom: 0}}><CartesianGrid strokeDasharray="3 5" horizontal={false} stroke="#e7ecf1"/><XAxis type="number" tickFormatter={v => metric === 'value' ? money(v, false) : `${v}×`} axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#68788a'}}/><YAxis dataKey="name" type="category" width={98} axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#36465b'}}/><Tooltip cursor={{fill: '#f1f5f9'}} formatter={v => metric === 'value' ? money(Number(v)) : `${Number(v).toFixed(2)}×`} contentStyle={{borderRadius: 10, border: '1px solid #dae3ea'}}/><Bar dataKey="value" name={metric === 'value' ? 'FEFC direto' : 'Índice'} radius={[0, 4, 4, 0]} barSize={15}>{rows.slice(0, 10).map(r => <ChartCell key={r.name} fill={partyColor(r.name)}/>)}</Bar></BarChart></ResponsiveContainer></div>;
 }
 export default function Home() {
   const [data, setData] = useState<Dataset | null>(null), [error, setError] = useState(false);
