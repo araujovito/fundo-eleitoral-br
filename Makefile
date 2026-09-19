@@ -3,7 +3,7 @@
 
 ANO ?= 2022
 
-.PHONY: setup verificar ingerir publicar tudo teste
+.PHONY: setup verificar ingerir publicar tudo teste checar-token
 
 setup:
 	pip install -e '.[dev]'
@@ -14,13 +14,23 @@ verificar: setup
 ingerir: setup
 	python -m fundo_eleitoral.ingestao --ano $(ANO)
 
+# Falha antes do download, nao depois. Segredo do Codespaces so entra na
+# maquina no boot: criar o segredo com a maquina ligada nao basta, e o erro
+# so apareceria ao fim de centenas de MB de ingestao.
+checar-token:
+	@test -n "$$HF_TOKEN" || { \
+	  echo "HF_TOKEN ausente. O segredo do Codespaces so e injetado quando a"; \
+	  echo "maquina inicia -- pare e reabra o codespace, ou confira se o segredo"; \
+	  echo "tem acesso a este repositorio em github.com/settings/codespaces."; \
+	  exit 1; }
+
 # REPO=usuario/nome make publicar
-publicar: setup
+publicar: setup checar-token
 	python -m fundo_eleitoral.publicacao --repo $(REPO) --ano $(ANO)
 
 # Ingere e publica na sequencia: o Parquet nao pode ficar so na maquina
 # efemera, senao some com ela (ADR-002).
-tudo: ingerir publicar
+tudo: checar-token ingerir publicar
 
 teste:
 	python -m pytest -q
