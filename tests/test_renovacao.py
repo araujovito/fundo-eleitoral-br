@@ -99,8 +99,11 @@ def test_percentuais_usam_total_do_grupo(tmp_path):
     linhas = distribuicao_renovacao(2022, raiz=tmp_path, cargos=("DEPUTADO FEDERAL",))
 
     assert sum(x.metricas.pct_fefc for x in linhas) == pytest.approx(100)
+    assert sum(x.metricas.pct_candidaturas for x in linhas) == pytest.approx(100)
     incumbente = next(x for x in linhas if x.perfil == INCUMBENTE_MESMO_CARGO)
     assert incumbente.metricas.pct_fefc == pytest.approx(100 / 194 * 100)
+    assert incumbente.metricas.pct_candidaturas == pytest.approx(100 / 7)
+    assert incumbente.metricas.indice_alocacao == pytest.approx((100 / 194 * 100) / (100 / 7))
 
 
 def test_filtros_de_aptidao_uf_e_cargo(tmp_path):

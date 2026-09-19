@@ -43,10 +43,12 @@ class MetricasPerfil:
     total_fefc: float
     pct_fefc: float
     n_candidaturas: int
+    pct_candidaturas: float
     n_financiadas: int
     cobertura_pct: float
     media_por_candidatura: float
     media_por_financiada: float
+    indice_alocacao: float
 
 
 @dataclass(frozen=True)
@@ -192,6 +194,9 @@ def distribuicao_renovacao(
         total = sum(valores)
         financiadas = sum(v > 0 for v in valores)
         n = len(valores)
+        total_candidaturas = candidaturas_grupo[grupo]
+        pct_fefc = 100 * total / total_grupo if total_grupo else 0.0
+        pct_candidaturas = 100 * n / total_candidaturas
         atributos = {dimensao: grupo[i] for i, dimensao in enumerate(por)}
         resultado.append(LinhaRenovacao(
             ano=ano,
@@ -202,12 +207,14 @@ def distribuicao_renovacao(
             perfil=perfil,
             metricas=MetricasPerfil(
                 total_fefc=total,
-                pct_fefc=100 * total / total_grupo if total_grupo else 0.0,
+                pct_fefc=pct_fefc,
                 n_candidaturas=n,
+                pct_candidaturas=pct_candidaturas,
                 n_financiadas=financiadas,
                 cobertura_pct=100 * financiadas / n,
                 media_por_candidatura=total / n,
                 media_por_financiada=total / financiadas if financiadas else 0.0,
+                indice_alocacao=pct_fefc / pct_candidaturas,
             ),
         ))
 
@@ -245,15 +252,17 @@ def relatorio(
     )
     anterior_real = linhas[0].ano_anterior if linhas else ano_anterior or _ANTERIOR.get(ano)
     print(f"\n=== {ano} versus {anterior_real} — FEFC por histórico eleitoral")
-    print("    partido       UF  cargo                perfil                     cand."
-          "  cob.       FEFC  fatia   média")
+    print("    partido       UF  cargo                perfil                    cand%"
+          "  cob.       FEFC  FEFC% índice   média")
     for linha in linhas:
         m = linha.metricas
         print(
             f"    {(linha.partido or '-'):13.13} {(linha.uf or '-'):>2}  "
-            f"{(linha.cargo or '-'):20.20} {linha.perfil:25.25} {m.n_candidaturas:5d} "
+            f"{(linha.cargo or '-'):20.20} {linha.perfil:25.25} "
+            f"{m.pct_candidaturas:5.1f}% "
             f"{m.cobertura_pct:5.1f}% R$ {m.total_fefc / 1e6:7.1f} mi "
-            f"{m.pct_fefc:5.1f}% R$ {m.media_por_candidatura / 1e3:6.1f} mil"
+            f"{m.pct_fefc:5.1f}% {m.indice_alocacao:5.2f}x "
+            f"R$ {m.media_por_candidatura / 1e3:6.1f} mil"
         )
 
 
