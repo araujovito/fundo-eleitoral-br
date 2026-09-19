@@ -283,3 +283,39 @@ e chama a coluna de `qt_eleitores_perfil` em vez de `qt_eleitores`; `ZZ`
 (exterior) precisa sair por linha, não só por nome de arquivo; e
 `votacao_candidato_munzona_2026` existe mas está vazio, porque a eleição ainda
 não aconteceu.
+
+## ADR-012 — Prioridade geográfica medida por cadeira, não só por eleitorado
+
+**Contexto.** A primeira versão comparava a fatia de cada UF no FEFC com a sua
+fatia no eleitorado. Roraima aparecia com 6,33x, o Amapá com 6,31x — leitura
+natural: os partidos privilegiam estados pequenos.
+
+**O problema.** Isso mede sobretudo a Constituição, não a estratégia. Cada
+estado elege no mínimo 8 deputados federais, então Roraima disputa 8 cadeiras
+com 366 mil eleitores enquanto São Paulo disputa 70 com 34,7 milhões. O FEFC
+segue candidaturas, que seguem cadeiras. Atribuir isso a escolha partidária é
+confundir desenho institucional com decisão.
+
+**Decisão.** Manter os dois denominadores. O índice por cadeira só é calculado
+quando a análise filtra **um cargo**: cadeira de deputado federal e de
+governador não se somam.
+
+**Efeito, deputado federal em 2022:**
+
+| UF | x eleitorado | x cadeira |
+|---|---|---|
+| RR | 6,33x | 0,95x |
+| AP | 6,31x | 1,43x |
+| SP | 0,62x | 1,02x |
+| RS | 0,79x | 0,72x |
+
+A leitura se inverte. São Paulo, aparentemente penalizada, recebe o
+proporcional às suas cadeiras; Roraima fica ligeiramente abaixo do par. O que
+resta de dispersão — 1,62x em Tocantins contra 0,72x no Rio Grande do Sul — é o
+sinal estratégico de verdade, e é muito menor do que o primeiro número sugeria.
+
+**De onde vêm as cadeiras.** De quem foi eleito no próprio ciclo, no cadastro
+de candidaturas. Confere com referência externa: 513 deputados federais em 2018
+e em 2022. Quando o ciclo ainda não tem resultado — 2026 — a função recua para
+o ciclo anterior, e isso precisa ser dito ao leitor: a redistribuição de
+cadeiras de 2023 alterou a bancada de vários estados.

@@ -12,13 +12,14 @@ def _gravar_base_sintetica(raiz):
     con = duckdb.connect()
     con.sql("""
         CREATE TABLE candidaturas AS SELECT * FROM (VALUES
-          ('sp', 'P', 'SP', 'DEPUTADO FEDERAL', 'APTO', 'ELEIÇÃO ORDINÁRIA'),
-          ('rj', 'P', 'RJ', 'DEPUTADO FEDERAL', 'APTO', 'ELEIÇÃO ORDINÁRIA'),
-          ('df', 'P', 'DF', 'DEPUTADO FEDERAL', 'APTO', 'ELEIÇÃO ORDINÁRIA'),
-          ('br', 'P', 'BR', 'PRESIDENTE', 'APTO', 'ELEIÇÃO ORDINÁRIA'),
-          ('inapta', 'P', 'SP', 'DEPUTADO FEDERAL', 'INAPTO', 'ELEIÇÃO ORDINÁRIA')
+          ('sp', 'P', 'SP', 'DEPUTADO FEDERAL', 'APTO', 'ELEIÇÃO ORDINÁRIA', 'ELEITO POR QP'),
+          ('sp2', 'P', 'SP', 'DEPUTADO FEDERAL', 'APTO', 'ELEIÇÃO ORDINÁRIA', 'ELEITO POR MÉDIA'),
+          ('rj', 'P', 'RJ', 'DEPUTADO FEDERAL', 'APTO', 'ELEIÇÃO ORDINÁRIA', 'ELEITO POR QP'),
+          ('df', 'P', 'DF', 'DEPUTADO FEDERAL', 'APTO', 'ELEIÇÃO ORDINÁRIA', 'NÃO ELEITO'),
+          ('br', 'P', 'BR', 'PRESIDENTE', 'APTO', 'ELEIÇÃO ORDINÁRIA', 'NÃO ELEITO'),
+          ('inapta', 'P', 'SP', 'DEPUTADO FEDERAL', 'INAPTO', 'ELEIÇÃO ORDINÁRIA', 'NÃO ELEITO')
         ) t(sq_candidato, sg_partido, sg_uf, ds_cargo, ds_situacao_candidatura,
-            nm_tipo_eleicao)
+            nm_tipo_eleicao, ds_sit_tot_turno)
     """)
     con.sql("""
         CREATE TABLE receitas AS SELECT * FROM (VALUES
@@ -67,3 +68,31 @@ def test_recorte_por_partido_e_aptidao(tmp_path):
                                    por_partido=True, apenas_aptas=True)
     assert {linha.partido for linha in linhas} == {"P"}
     assert sum(linha.metricas.total_fefc for linha in linhas) == 400
+
+
+def test_indice_por_cadeira_so_existe_com_cargo_unico(tmp_path):
+    _gravar_base_sintetica(tmp_path)
+
+    misturado = prioridade_geografica(2022, raiz=tmp_path,
+                                      dimensao=tmp_path / "dimensoes" / "eleitorado.parquet")
+    assert all(l.metricas.indice_por_cadeira is None for l in misturado), (
+        "cadeira de deputado federal e de presidente nao se somam")
+
+    um_cargo = prioridade_geografica(2022, raiz=tmp_path,
+                                     dimensao=tmp_path / "dimensoes" / "eleitorado.parquet",
+                                     cargos=("DEPUTADO FEDERAL",))
+    com_cadeira = [l for l in um_cargo if l.metricas.cadeiras]
+    assert com_cadeira, "com um cargo so, as cadeiras devem ser derivadas"
+
+
+def test_cadeiras_vem_de_quem_foi_eleito(tmp_path):
+    _gravar_base_sintetica(tmp_path)
+
+    linhas = prioridade_geografica(2022, raiz=tmp_path,
+                                   dimensao=tmp_path / "dimensoes" / "eleitorado.parquet",
+                                   cargos=("DEPUTADO FEDERAL",))
+    por_uf = {l.uf: l.metricas for l in linhas}
+    # SP elegeu dois (por QP e por media), RJ um; DF nao elegeu ninguem.
+    assert por_uf["SP"].cadeiras == 2
+    assert por_uf["RJ"].cadeiras == 1
+    assert por_uf["DF"].cadeiras is None

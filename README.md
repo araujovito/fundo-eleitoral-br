@@ -56,16 +56,36 @@ sem ingestão local. Ver
 [docs/decisoes.md](docs/decisoes.md) para as decisões de arquitetura e as
 pendências conhecidas.
 
-### Prioridade geográfica: comparar fundo e eleitorado
+### Achado: a "prioridade" dos estados pequenos é constitucional, não estratégica
 
-`fundo_eleitoral.geografia` compara, para cada UF, a sua fatia no FEFC direto
-com a sua fatia no eleitorado oficial do TSE. O `índice de prioridade` é a
-razão entre essas duas participações: 1,00x equivale ao peso eleitoral; 2,00x
-significa o dobro dele. Candidaturas nacionais (`SG_UF = BR`) ficam fora, pois
-atribuir sua receita a estados seria uma suposição sem base nos dados.
+`fundo_eleitoral.geografia` compara a fatia de cada UF no FEFC com dois
+denominadores. Contra o **eleitorado**, estados pequenos parecem receber várias
+vezes o seu peso. Contra as **cadeiras em disputa**, quase todo esse excesso
+desaparece — porque a Constituição garante no mínimo 8 deputados federais por
+estado, e o fundo segue candidaturas, que seguem cadeiras.
+
+Deputado federal, 2022:
+
+| UF | x eleitorado | x cadeira |
+|---|---|---|
+| RR | 6,33x | **0,95x** |
+| AP | 6,31x | **1,43x** |
+| TO | 3,60x | **1,62x** |
+| SP | 0,62x | **1,02x** |
+| RS | 0,79x | **0,72x** |
+
+A leitura se inverte: São Paulo, que parecia penalizada, recebe exatamente o
+proporcional às suas cadeiras; Roraima, que parecia privilegiada seis vezes,
+fica ligeiramente abaixo do par. O que sobra depois de descontar o desenho
+institucional — Tocantins em 1,62x, Rio Grande do Sul em 0,72x — é que é
+escolha do partido. Ver [ADR-012](docs/decisoes.md).
+
+As cadeiras são derivadas de quem foi eleito no próprio ciclo, o que dá 513
+deputados federais em 2018 e em 2022. Candidaturas nacionais (`SG_UF = BR`)
+ficam fora: atribuir sua receita a estados seria suposição sem base nos dados.
 
 ```bash
-python -m fundo_eleitoral.geografia --ano 2022
+python -m fundo_eleitoral.geografia --ano 2022 --cargo "DEPUTADO FEDERAL"
 python -m fundo_eleitoral.geografia --ano 2022 --por-partido --minimo-milhoes 20
 ```
 

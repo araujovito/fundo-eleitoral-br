@@ -37,6 +37,12 @@ class MetricasGeograficas:
     indice_prioridade: float
     n_candidaturas: int
     n_financiadas: int
+    # Cadeiras em disputa na UF para o cargo analisado, e o indice medido
+    # contra elas em vez do eleitorado. None quando a analise mistura cargos:
+    # cadeira de deputado federal e de governador nao se somam.
+    cadeiras: int | None = None
+    pct_cadeiras: float | None = None
+    indice_por_cadeira: float | None = None
 
 
 @dataclass(frozen=True)
@@ -67,6 +73,35 @@ def _eleitorado_por_uf(ano: int, dimensao: str | Path) -> dict[str, int]:
     return {uf: eleitorado for uf, eleitorado in rows}
 
 
+def _cadeiras_por_uf(ano: int, raiz: str | Path, cargo: str) -> tuple[dict[str, int], int]:
+    """Cadeiras em disputa por UF, derivadas de quem foi eleito.
+
+    Conferido contra referencia externa: da 513 deputados federais em 2018 e em
+    2022, que e o tamanho da Camara.
+
+    Devolve tambem o ciclo de onde os numeros vieram. Em 2026 os resultados
+    ainda nao existem (`ds_sit_tot_turno` = '#NULO'), entao a funcao recua para
+    o ciclo anterior -- e quem chama precisa dizer isso ao leitor, porque a
+    redistribuicao de cadeiras de 2023 alterou a bancada de varios estados.
+    """
+    for candidato_ano in (ano, ano - 4, ano - 8):
+        cand = caminho(raiz, candidato_ano, "consulta_cand")
+        try:
+            rows = duckdb.sql(f"""
+                SELECT upper(trim(sg_uf)) AS uf, count(*) AS n
+                FROM (SELECT DISTINCT sq_candidato, sg_uf FROM '{cand}'
+                      WHERE upper(trim(ds_cargo)) = '{cargo.upper()}'
+                        AND ds_sit_tot_turno ILIKE 'ELEITO%')
+                GROUP BY 1
+            """).fetchall()
+        except duckdb.Error:
+            continue
+        cadeiras = {uf: n for uf, n in rows if uf in UFS_BRASIL}
+        if cadeiras:
+            return cadeiras, candidato_ano
+    return {}, ano
+
+
 def prioridade_geografica(
     ano: int,
     raiz: str | Path = HF,
@@ -90,6 +125,13 @@ def prioridade_geografica(
     conjunto dos partidos.
     """
     eleitorado = _eleitorado_por_uf(ano, dimensao)
+    # Cadeiras so fazem sentido com um cargo unico: a comparacao com o
+    # eleitorado mede malapportionment (RR elege 8 deputados com 366 mil
+    # eleitores, por piso constitucional), nao escolha do partido. Ver ADR-012.
+    cadeiras, ano_cadeiras = ({}, ano)
+    if len(cargos) == 1:
+        cadeiras, ano_cadeiras = _cadeiras_por_uf(ano, raiz, cargos[0])
+    total_cadeiras = sum(cadeiras.values())
     cand = caminho(raiz, ano, "consulta_cand")
     receitas = caminho(raiz, ano, "receitas_candidatos")
     aptidao = clausula_aptidao(cand, apenas_aptas, "AND")
@@ -156,6 +198,12 @@ def prioridade_geografica(
                     pct_fefc=pct_fefc,
                     diferenca_pp=pct_fefc - pct_eleitorado,
                     indice_prioridade=pct_fefc / pct_eleitorado if pct_eleitorado else 0.0,
+                    cadeiras=cadeiras.get(uf) if cadeiras else None,
+                    pct_cadeiras=(100 * cadeiras[uf] / total_cadeiras
+                                  if cadeiras.get(uf) and total_cadeiras else None),
+                    indice_por_cadeira=(
+                        pct_fefc / (100 * cadeiras[uf] / total_cadeiras)
+                        if cadeiras.get(uf) and total_cadeiras else None),
                     n_candidaturas=len(valores),
                     n_financiadas=sum(v > 0 for v in valores),
                 ),
@@ -176,8 +224,13 @@ def relatorio(
         ufs=ufs, minimo_reais=minimo_reais,
     )
     detalhe = "por partido" if por_partido else "conjunto dos partidos"
+    tem_cadeira = any(l.metricas.indice_por_cadeira is not None for l in linhas)
     print(f"\n=== {ano} — prioridade geografica ({detalhe})")
-    print("    partido       UF  eleitorado  eleitorado%       FEFC  FEFC%   dif.  indice")
+    if tem_cadeira:
+        print("    Indice por cadeira isola a escolha do partido; o indice por eleitorado")
+        print("    mede sobretudo o piso constitucional de bancada (ADR-012).")
+    print("    partido       UF  eleitorado  eleitorado%       FEFC  FEFC%   dif.  indice"
+          + ("  cadeiras  x cadeira" if tem_cadeira else ""))
     for linha in linhas:
         m = linha.metricas
         print(
@@ -185,6 +238,8 @@ def relatorio(
             f"{m.eleitorado:10,d} {m.pct_eleitorado:10.2f}% "
             f"R$ {m.total_fefc / 1e6:7.1f} mi {m.pct_fefc:5.2f}% "
             f"{m.diferenca_pp:+5.2f} {m.indice_prioridade:6.2f}x".replace(",", ".")
+            + (f" {m.cadeiras or 0:9d} {m.indice_por_cadeira:9.2f}x"
+               if m.indice_por_cadeira is not None else "")
         )
 
 
