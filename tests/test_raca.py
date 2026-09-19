@@ -75,6 +75,7 @@ def test_detecta_partido_abaixo_da_proporcao(tmp_path):
     assert q.pct_candidaturas_negras == 50
     assert q.pct_repassado_negras == 20
     assert q.diferenca == -30
+    assert q.deficit_milhoes == pytest.approx(0.00003)
     assert not q.proporcional
 
 

@@ -41,6 +41,11 @@ class LinhaRaca:
     def proporcional(self) -> bool:
         return self.diferenca >= 0
 
+    @property
+    def deficit_milhoes(self) -> float:
+        """FEFC direto adicional para igualar a proporcao, limitado a zero."""
+        return max(0.0, -self.diferenca * self.fefc_milhoes / 100)
+
 
 def _base(raiz: str | Path, ano: int, tabela: str) -> str:
     return f"{raiz}/{ano}/{tabela}.parquet"
@@ -184,13 +189,14 @@ def relatorio(
         )
         abaixo = [linha for linha in linhas if not linha.proporcional]
         print(f"    {len(abaixo)} de {len(linhas)} partidos abaixo da proporção")
-        print("    partido          FEFC   candid.  repasse   diferença  sem raça")
+        print("    partido          FEFC   candid.  repasse   diferença   déficit  sem raça")
         for linha in linhas:
             marca = "  ABAIXO" if not linha.proporcional else ""
             print(
                 f"    {linha.partido:<13} R$ {linha.fefc_milhoes:7.1f} mi "
                 f"{linha.pct_candidaturas_negras:7.1f}% "
                 f"{linha.pct_repassado_negras:7.1f}% {linha.diferenca:+9.1f} pp "
+                f"R$ {linha.deficit_milhoes:6.1f} mi "
                 f"{linha.pct_candidaturas_sem_raca:7.1f}%{marca}"
             )
 
