@@ -14,13 +14,12 @@ from pathlib import Path
 
 import duckdb
 
-from .consulta import HF, caminho, cte_fefc
+from .consulta import DIMENSOES, FONTE_FEFC, HF, VALOR, caminho, cte_fefc
 
 
 def exportar(destino: Path, raiz: str = HF, anos: tuple[int, ...] = (2018, 2022, 2026)):
     resultado = {"generatedAt": datetime.now(UTC).isoformat(), "source": raiz,
                  "years": {}}
-    dimensoes = Path(__file__).resolve().parents[2] / "dados" / "dimensoes"
     for ano in anos:
         cand = caminho(raiz, ano, "consulta_cand")
         rec = caminho(raiz, ano, "receitas_candidatos")
@@ -47,8 +46,9 @@ def exportar(destino: Path, raiz: str = HF, anos: tuple[int, ...] = (2018, 2022,
             if cell["party"] == "PC DO B":
                 cell["party"] = "PCDOB"
             cell["value"] = round(cell["value"], 2)
-        electorate = dict(duckdb.sql(f"SELECT sg_uf, qt_eleitores FROM "
-                                    f"'{dimensoes / 'eleitorado.parquet'}' WHERE ano={ano}").fetchall())
+        electorate = dict(duckdb.sql(
+            f"SELECT sg_uf, qt_eleitores FROM '{DIMENSOES}/eleitorado.parquet' WHERE ano={ano}"
+        ).fetchall())
         # Eficiência restrita a cargos proporcionais, comparáveis em turno único.
         efficiency = []
         if ano in (2018, 2022):
@@ -68,8 +68,8 @@ def exportar(destino: Path, raiz: str = HF, anos: tuple[int, ...] = (2018, 2022,
             path = caminho(raiz, ano, tabela)
             rows = duckdb.sql(f"""
                 SELECT sg_partido, sg_partido_doador, ds_esfera_partidaria_doador,
-                       {dest}, sum(CAST(replace(vr_receita, ',', '.') AS DOUBLE))
-                FROM '{path}' WHERE upper(trim(ds_fonte_receita))='FUNDO ESPECIAL'
+                       {dest}, sum({VALOR})
+                FROM '{path}' WHERE upper(trim(ds_fonte_receita))=upper('{FONTE_FEFC}')
                 GROUP BY 1, 2, 3, 4
             """).fetchall()
             for party, donor_party, source, target, value in rows:

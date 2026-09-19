@@ -49,15 +49,15 @@ class LinhaEficiencia:
 
 
 def _tem_votos(ano: int, dimensao: str | Path) -> bool:
-    caminho_dimensao = Path(dimensao)
-    if not caminho_dimensao.exists():
+    try:
+        return bool(duckdb.sql(
+            f"SELECT count(*) > 0 FROM '{dimensao}' WHERE ano = {ano}"
+        ).fetchone()[0])
+    except duckdb.IOException as erro:
         raise FileNotFoundError(
-            f"dimensao de votos ausente: {caminho_dimensao}. "
+            f"dimensao de votos ausente: {dimensao}. "
             "Gere com: python -m fundo_eleitoral.dimensoes --ano <ano>"
-        )
-    return bool(duckdb.sql(
-        f"SELECT count(*) > 0 FROM '{caminho_dimensao}' WHERE ano = {ano}"
-    ).fetchone()[0])
+        ) from erro
 
 
 def _perfil(situacao: str | None) -> str:
