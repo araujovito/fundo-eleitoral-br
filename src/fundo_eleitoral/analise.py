@@ -15,21 +15,17 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import duckdb
+from .consulta import FONTE_FEFC, HF, ORIGEM_REPASSE, VALOR, caminho, tem_candidaturas_aptas
 
 # Dataset publico gerado por este projeto; a analise roda sem ingestao local.
-HF = "hf://datasets/buscafe/fundo-eleitoral-br/parquet"
 
 PISO_LEGAL = 30.0
 
-# vr_receita vem como texto com virgula decimal (tudo e string por ADR-004).
-_VALOR = "CAST(replace(vr_receita, ',', '.') AS DOUBLE)"
+# A cota regula a distribuicao feita PELO PARTIDO: FEFC vindo de outra
+# candidatura ja foi contado no repasse original (ADR-009).
+_so_direto = f"AND ds_origem_receita <> '{ORIGEM_REPASSE}'"
 
-# O que a cota regula e a distribuicao FEITA PELO PARTIDO. FEFC que chega a uma
-# candidatura vindo de outra candidatura ja foi contado quando o partido o
-# repassou, e esse fluxo e enviesado: 75% dele vai para homens, contra 69% do
-# fundo como um todo (2022). Incluir inflava o denominador e subestimava a
-# fatia feminina. Ver ADR-009.
-_SO_REPASSE_DIRETO = "AND ds_origem_receita <> 'Recursos de outros candidatos'"
+
 
 
 @dataclass(frozen=True)
@@ -58,8 +54,6 @@ def piso_do_partido(pct_candidaturas: float) -> float:
     return max(PISO_LEGAL, pct_candidaturas)
 
 
-def _base(raiz: str | Path, ano: int, tabela: str) -> str:
-    return f"{raiz}/{ano}/{tabela}.parquet"
 
 
 def cota_genero(ano: int, raiz: str | Path = HF, minimo_reais: float = 20e6) -> list[LinhaPartido]:
@@ -73,8 +67,8 @@ def cota_genero(ano: int, raiz: str | Path = HF, minimo_reais: float = 20e6) -> 
     filtro de aptidao so e aplicado quando existe -- do contrario o resultado
     viria vazio.
     """
-    rec = _base(raiz, ano, "receitas_candidatos")
-    cand = _base(raiz, ano, "consulta_cand")
+    rec = caminho(raiz, ano, "receitas_candidatos")
+    cand = caminho(raiz, ano, "consulta_cand")
 
     tem_situacao = duckdb.sql(
         f"SELECT count(*) FROM '{cand}' WHERE ds_situacao_candidatura ILIKE 'APTO%'"
@@ -84,10 +78,10 @@ def cota_genero(ano: int, raiz: str | Path = HF, minimo_reais: float = 20e6) -> 
     rows = duckdb.sql(f"""
         WITH fefc AS (
           SELECT sg_partido,
-                 sum({_VALOR}) AS total,
-                 sum(CASE WHEN ds_genero = 'Feminino' THEN {_VALOR} END) AS fem
+                 sum({VALOR}) AS total,
+                 sum(CASE WHEN ds_genero = 'Feminino' THEN {VALOR} END) AS fem
           FROM '{rec}'
-          WHERE ds_fonte_receita = 'FUNDO ESPECIAL' {_SO_REPASSE_DIRETO}
+          WHERE ds_fonte_receita = '{FONTE_FEFC}' {_so_direto}
           GROUP BY 1
         ),
         cands AS (
@@ -107,11 +101,11 @@ def cota_genero(ano: int, raiz: str | Path = HF, minimo_reais: float = 20e6) -> 
 
 def total_nacional(ano: int, raiz: str | Path = HF) -> tuple[float, float]:
     """(FEFC total em bilhoes, % que foi para candidaturas femininas)."""
-    rec = _base(raiz, ano, "receitas_candidatos")
+    rec = caminho(raiz, ano, "receitas_candidatos")
     total, fem = duckdb.sql(f"""
-        SELECT sum({_VALOR}), sum(CASE WHEN ds_genero = 'Feminino' THEN {_VALOR} END)
+        SELECT sum({VALOR}), sum(CASE WHEN ds_genero = 'Feminino' THEN {VALOR} END)
         FROM '{rec}'
-        WHERE ds_fonte_receita = 'FUNDO ESPECIAL' {_SO_REPASSE_DIRETO}
+        WHERE ds_fonte_receita = '{FONTE_FEFC}' {_so_direto}
     """).fetchone()
     return total / 1e9, 100 * fem / total
 

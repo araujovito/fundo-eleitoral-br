@@ -219,3 +219,28 @@ repasse a candidaturas negras em 2022 passa de 36,6% para 36,5% (defasagem de
 R$ 671,4 mi para R$ 654,4 mi, e de 23 de 24 partidos abaixo para 21 de 23);
 a razão incumbente/novo a deputado federal sobe de 12,5x para 12,7x, porque o
 repasse entre candidaturas favorecia proporcionalmente os novos nomes.
+
+## ADR-010 — Uma definição só para a consulta de FEFC
+
+**Contexto.** Cada recorte novo nasceu copiando a consulta do anterior. O
+resultado: `_VALOR`, o caminho do Parquet, o teste de aptidão e a CTE de FEFC
+apareciam nos quatro módulos de análise. Quando o ADR-009 mostrou que a
+consulta estava errada, a correção teve de ser feita e testada quatro vezes —
+e nas duas primeiras vezes eu esqueci os outros dois módulos.
+
+**Decisão.** `consulta.py` guarda a definição: `VALOR`, `FONTE_FEFC`,
+`ORIGEM_REPASSE`, `caminho`, `tem_candidaturas_aptas`, `clausula_aptidao` e
+`cte_fefc`. Quem escrever um recorte novo monta a CTE daí.
+
+**Por quê.** O problema não era digitar a mesma coisa quatro vezes — era o
+defeito se propagar por cópia. Um recorte novo herdava a consulta do vizinho
+com o defeito que ela tivesse naquele dia.
+
+**Verificação.** A refatoração foi validada comparando a saída dos quatro
+recortes, nos três ciclos, antes e depois: byte a byte idêntica. Um teste em
+`test_consulta.py` falha se algum módulo voltar a definir a própria versão.
+
+**O que ficou de fora.** A agregação de `analise.py` é por partido, não por
+candidatura, e não cabe na `cte_fefc` — ela usa as constantes compartilhadas
+mas mantém a própria consulta. Forçar o encaixe teria produzido um helper com
+parâmetros demais para servir a dois casos.

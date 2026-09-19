@@ -16,14 +16,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import duckdb
+from .consulta import HF, VALOR, caminho, cte_fefc, clausula_aptidao
 
-from .analise import HF
 
-_VALOR = "CAST(replace(vr_receita, ',', '.') AS DOUBLE)"
-# FEFC que chega a uma candidatura vindo de outra ja foi contado quando o
-# partido o repassou, e o fluxo e enviesado (75% vai para homens, contra 69%
-# do fundo como um todo em 2022). Ver ADR-009.
-_SO_REPASSE_DIRETO = "AND ds_origem_receita <> 'Recursos de outros candidatos'"
 _DIMENSOES = {"partido": 0, "uf": 1, "cargo": 2}
 _ANTERIOR = {2022: 2018, 2026: 2022}
 
@@ -66,15 +61,8 @@ class LinhaRenovacao:
     metricas: MetricasPerfil
 
 
-def _base(raiz: str | Path, ano: int, tabela: str) -> str:
-    return f"{raiz}/{ano}/{tabela}.parquet"
 
 
-def _tem_candidaturas_aptas(caminho: str) -> bool:
-    return duckdb.sql(
-        f"SELECT count(*) > 0 FROM '{caminho}' "
-        "WHERE ds_situacao_candidatura ILIKE 'APTO%'"
-    ).fetchone()[0]
 
 
 def _perfil(cpf_valido: bool, ja_concorreu: bool, eleito: bool, mesmo_cargo: bool) -> str:
@@ -120,12 +108,11 @@ def distribuicao_renovacao(
     if len(set(por)) != len(por):
         raise ValueError("dimensoes repetidas")
 
-    atual = _base(raiz, ano, "consulta_cand")
-    anterior = _base(raiz, ano_anterior, "consulta_cand")
-    receitas = _base(raiz, ano, "receitas_candidatos")
-    filtro_aptidao = ""
-    if apenas_aptas and _tem_candidaturas_aptas(atual):
-        filtro_aptidao = "AND ds_situacao_candidatura ILIKE 'APTO%'"
+    atual = caminho(raiz, ano, "consulta_cand")
+    anterior = caminho(raiz, ano_anterior, "consulta_cand")
+    receitas = caminho(raiz, ano, "receitas_candidatos")
+    aptidao = clausula_aptidao(atual, apenas_aptas, "AND")
+    _cte_fefc = cte_fefc(receitas)
 
     # O filtro de eleicao ordinaria impede que pleitos suplementares presentes
     # no mesmo arquivo anual criem falsos historicos ou candidaturas duplicadas.
@@ -138,7 +125,7 @@ def distribuicao_renovacao(
                  any_value(trim(nr_cpf_candidato)) AS cpf
           FROM '{atual}'
           WHERE nm_tipo_eleicao ILIKE '%ORDINÁRIA%'
-          {filtro_aptidao}
+          {aptidao}
           GROUP BY 1
         ),
         historico_cargo AS (
@@ -150,12 +137,7 @@ def distribuicao_renovacao(
             AND regexp_matches(trim(nr_cpf_candidato), '^[0-9]{{11}}$')
           GROUP BY 1, 2
         ),
-        fefc AS (
-          SELECT sq_candidato, sum({_VALOR}) AS valor
-          FROM '{receitas}'
-          WHERE ds_fonte_receita = 'FUNDO ESPECIAL' {_SO_REPASSE_DIRETO}
-          GROUP BY 1
-        )
+        {_cte_fefc}
         SELECT a.partido, a.uf, a.cargo, coalesce(f.valor, 0.0) AS valor,
                regexp_matches(a.cpf, '^[0-9]{{11}}$') AS cpf_valido,
                count(h.cpf) > 0 AS ja_concorreu,

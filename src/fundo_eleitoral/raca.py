@@ -16,14 +16,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import duckdb
+from .consulta import HF, VALOR, caminho, cte_fefc, clausula_aptidao
 
-from .analise import HF
 
-_VALOR = "CAST(replace(vr_receita, ',', '.') AS DOUBLE)"
-# FEFC que chega a uma candidatura vindo de outra ja foi contado quando o
-# partido o repassou, e o fluxo e enviesado (75% vai para homens, contra 69%
-# do fundo como um todo em 2022). Ver ADR-009.
-_SO_REPASSE_DIRETO = "AND ds_origem_receita <> 'Recursos de outros candidatos'"
 RACAS_NEGRAS = ("PRETA", "PARDA")
 
 
@@ -51,15 +46,8 @@ class LinhaRaca:
         return max(0.0, -self.diferenca * self.fefc_milhoes / 100)
 
 
-def _base(raiz: str | Path, ano: int, tabela: str) -> str:
-    return f"{raiz}/{ano}/{tabela}.parquet"
 
 
-def _tem_candidaturas_aptas(caminho: str) -> bool:
-    return duckdb.sql(
-        f"SELECT count(*) > 0 FROM '{caminho}' "
-        "WHERE ds_situacao_candidatura ILIKE 'APTO%'"
-    ).fetchone()[0]
 
 
 def proporcionalidade_racial(
@@ -78,11 +66,10 @@ def proporcionalidade_racial(
     candidaturas não tiver sido publicada. Eleições suplementares presentes no
     arquivo anual são sempre excluídas.
     """
-    cand = _base(raiz, ano, "consulta_cand")
-    rec = _base(raiz, ano, "receitas_candidatos")
-    filtro_aptidao = ""
-    if apenas_aptas and _tem_candidaturas_aptas(cand):
-        filtro_aptidao = "AND ds_situacao_candidatura ILIKE 'APTO%'"
+    cand = caminho(raiz, ano, "consulta_cand")
+    rec = caminho(raiz, ano, "receitas_candidatos")
+    aptidao = clausula_aptidao(cand, apenas_aptas, "AND")
+    _cte_fefc = cte_fefc(rec)
 
     negras = ", ".join(f"'{raca}'" for raca in RACAS_NEGRAS)
     rows = duckdb.sql(f"""
@@ -92,15 +79,10 @@ def proporcionalidade_racial(
                  any_value(upper(trim(ds_cor_raca))) AS raca
           FROM '{cand}'
           WHERE nm_tipo_eleicao ILIKE '%ORDINÁRIA%'
-          {filtro_aptidao}
+          {aptidao}
           GROUP BY 1
         ),
-        fefc AS (
-          SELECT sq_candidato, sum({_VALOR}) AS valor
-          FROM '{rec}'
-          WHERE ds_fonte_receita = 'FUNDO ESPECIAL' {_SO_REPASSE_DIRETO}
-          GROUP BY 1
-        ),
+        {_cte_fefc},
         base AS (
           SELECT c.partido, c.raca, coalesce(f.valor, 0.0) AS valor
           FROM candidaturas c
@@ -141,26 +123,20 @@ def total_nacional(
     apenas_aptas: bool = False,
 ) -> LinhaRaca:
     """Agregado nacional, usando as mesmas regras da analise partidaria."""
-    cand = _base(raiz, ano, "consulta_cand")
-    rec = _base(raiz, ano, "receitas_candidatos")
-    filtro_aptidao = ""
-    if apenas_aptas and _tem_candidaturas_aptas(cand):
-        filtro_aptidao = "AND ds_situacao_candidatura ILIKE 'APTO%'"
+    cand = caminho(raiz, ano, "consulta_cand")
+    rec = caminho(raiz, ano, "receitas_candidatos")
+    aptidao = clausula_aptidao(cand, apenas_aptas, "AND")
+    _cte_fefc = cte_fefc(rec)
     negras = ", ".join(f"'{raca}'" for raca in RACAS_NEGRAS)
     total, pct_fefc, pct_cand, pct_sem_raca = duckdb.sql(f"""
         WITH candidaturas AS (
           SELECT sq_candidato, any_value(upper(trim(ds_cor_raca))) AS raca
           FROM '{cand}'
           WHERE nm_tipo_eleicao ILIKE '%ORDINÁRIA%'
-          {filtro_aptidao}
+          {aptidao}
           GROUP BY 1
         ),
-        fefc AS (
-          SELECT sq_candidato, sum({_VALOR}) AS valor
-          FROM '{rec}'
-          WHERE ds_fonte_receita = 'FUNDO ESPECIAL' {_SO_REPASSE_DIRETO}
-          GROUP BY 1
-        )
+        {_cte_fefc}
         SELECT sum(coalesce(f.valor, 0)) / 1e6,
                100 * coalesce(sum(f.valor) FILTER (WHERE c.raca IN ({negras})), 0)
                    / nullif(sum(f.valor), 0),

@@ -20,15 +20,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import duckdb
+from .consulta import HF, VALOR, caminho, cte_fefc, clausula_aptidao
 
-from .analise import HF
 
-_VALOR = "CAST(replace(vr_receita, ',', '.') AS DOUBLE)"
 _DIMENSOES = {"uf": "uf", "cargo": "cargo"}
 
-# FEFC que chega a uma candidatura vindo de outra ja foi contado quando o
-# partido o repassou da primeira vez. Ver ADR-009.
-_ORIGEM_REPASSE = "Recursos de outros candidatos"
 
 
 @dataclass(frozen=True)
@@ -110,15 +106,8 @@ def calcular_metricas(valores: Iterable[float]) -> MetricasConcentracao:
     )
 
 
-def _base(raiz: str | Path, ano: int, tabela: str) -> str:
-    return f"{raiz}/{ano}/{tabela}.parquet"
 
 
-def _tem_candidaturas_aptas(caminho: str) -> bool:
-    return duckdb.sql(
-        f"SELECT count(*) > 0 FROM '{caminho}' "
-        "WHERE ds_situacao_candidatura ILIKE 'APTO%'"
-    ).fetchone()[0]
 
 
 def concentracao_fefc(
@@ -159,15 +148,10 @@ def concentracao_fefc(
     if len(set(por)) != len(por):
         raise ValueError("dimensoes repetidas")
 
-    cand = _base(raiz, ano, "consulta_cand")
-    rec = _base(raiz, ano, "receitas_candidatos")
-    filtro = ""
-    if apenas_aptas and _tem_candidaturas_aptas(cand):
-        filtro = "WHERE ds_situacao_candidatura ILIKE 'APTO%'"
-    filtro_repasse = (
-        "" if incluir_repasse_entre_candidatos
-        else f"AND ds_origem_receita <> '{_ORIGEM_REPASSE}'"
-    )
+    cand = caminho(raiz, ano, "consulta_cand")
+    rec = caminho(raiz, ano, "receitas_candidatos")
+    filtro = clausula_aptidao(cand, apenas_aptas)
+    _cte_fefc = cte_fefc(rec, incluir_repasse_entre_candidatos)
 
     # O GROUP BY elimina duplicatas reais do cadastro: em 2018 e 2022 alguns
     # sq_candidato aparecem duas vezes, sem divergencia de partido/UF/cargo.
@@ -181,13 +165,7 @@ def concentracao_fefc(
           {filtro}
           GROUP BY 1
         ),
-        fefc AS (
-          SELECT sq_candidato, sum({_VALOR}) AS valor
-          FROM '{rec}'
-          WHERE ds_fonte_receita = 'FUNDO ESPECIAL'
-          {filtro_repasse}
-          GROUP BY 1
-        )
+        {_cte_fefc}
         SELECT c.partido, c.uf, c.cargo, coalesce(f.valor, 0.0) AS valor
         FROM candidaturas c
         LEFT JOIN fefc f USING (sq_candidato)

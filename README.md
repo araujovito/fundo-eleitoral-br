@@ -113,6 +113,7 @@ DuckDB, sem banco servidor. As duas etapas são deliberadamente separadas —
 o porquê está em [ADR-001](docs/decisoes.md#adr-001--ingestão-e-análise-são-etapas-separadas).
 
 ```
+consulta.py    definição única da consulta de FEFC, usada pelos 4 recortes
 fontes.py      catálogo de URLs e dialeto dos CSVs do TSE
 ingestao.py    baixa → extrai → converte para Parquet  (roda raro)
 publicacao.py  sobe os Parquet para um dataset público no Hugging Face
