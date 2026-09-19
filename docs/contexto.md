@@ -27,6 +27,7 @@ dimensoes.py   deriva eleitorado e votos do TSE         (ADR-011)
 publicacao.py  Parquet → dataset público no Hugging Face
 consulta.py    a definição única da consulta de FEFC    (ADR-010)
 <recorte>.py   análise; lê Parquet, nunca baixa
+dashboard.py   agregados dos recortes → JSON do painel
 ```
 
 **Dados:**
@@ -45,6 +46,16 @@ quem clonar o repositório reproduz os números sem refazer a ingestão.
 | `geografia` | quais UFs recebem acima do seu peso? | [geografia.md](geografia.md) |
 | `eficiencia` | quanto custa cada voto? | [eficiencia.md](eficiencia.md) |
 | `fluxos` | por onde o dinheiro circula? | [fluxos.md](fluxos.md) |
+
+**Dashboard.** `dashboard/` traz o Observatório do Fundo Eleitoral: seis abas
+em React sobre os mesmos agregados, com filtro por ciclo, partido e cargo.
+Ele não consulta o Parquet ao abrir — `dashboard.py` exporta uma fotografia
+datada para `dashboard/public/data.json`, sem nome, CPF ou CNPJ, e a interface
+lê esse arquivo. Atualizar o painel é reexecutar a exportação e commitar o
+JSON. Limites registrados em [dashboard/README.md](../dashboard/README.md): a
+aba de eficiência só compara cargos proporcionais de turno único, e a
+validação foi por tipos, build e testes de reconciliação — não por inspeção
+visual no navegador.
 
 ## O que aprendemos
 
@@ -73,8 +84,14 @@ Antes de abrir o oitavo recorte, consolidar:
 2. **2026 em acompanhamento.** A prestação é parcial e muda até a eleição.
    Vale reingerir periodicamente e observar o que se move — é o único recorte
    que ninguém mais está fazendo em tempo real.
-3. **Visualização.** Os achados de gênero e de geografia pedem gráfico; a
-   tabela esconde o que o ponto mostra.
+3. **Fechar o ciclo do dashboard.** A visualização existe, mas o JSON é
+   gerado à mão. O painel data a própria extração no rodapé, então não engana
+   quem olha; o que falta é a exportação acompanhar a reingestão de 2026, em
+   vez de depender de alguém lembrar de rodá-la.
+4. **A normalização de sigla está copiada em sete módulos.** `PC DO B` →
+   `PCDOB` aparece solto em cada recorte e agora também em `dashboard.py`. É o
+   mesmo padrão que gerou o ADR-010: quando a próxima sigla mudar, a correção
+   terá de ser feita sete vezes.
 
 Depois disso: incumbentes por cargo (hoje só deputado federal), eficiência
 descontando o efeito de puxador de voto, e o grafo de fluxos levado até o
