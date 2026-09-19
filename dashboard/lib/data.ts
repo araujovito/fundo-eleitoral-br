@@ -1,7 +1,10 @@
 export type Cell = {party: string; uf: string; office: string; gender: string; race: string; candidates: number; funded: number; value: number};
 export type Flow = {party: string; donorParty: string; source: string; target: string; value: number};
 export type Efficiency = {party: string; uf: string; office: string; value: number; votes: number; candidates: number};
-export type Dataset = {generatedAt: string; source: string; years: Record<string, {cells: Cell[]; electorate: Record<string, number>; efficiency: Efficiency[]; flows: Flow[]}>};
+export type Concentration = {party: string; gini: number; coverage: number; top10: number};
+export type Renewal = {profile: string; value: number; candidates: number; share: number};
+export type SeatReference = {year: number; byUf: Record<string, number>};
+export type Dataset = {generatedAt: string; source: string; years: Record<string, {cells: Cell[]; electorate: Record<string, number>; seats: Record<string, SeatReference>; efficiency: Efficiency[]; flows: Flow[]; concentration: Concentration[]; renewal: Renewal[]}>};
 export const number = (v: number) => new Intl.NumberFormat('pt-BR').format(v || 0);
 export const percent = (v: number) => `${Number.isFinite(v) ? v.toLocaleString('pt-BR', {maximumFractionDigits: 1}) : '0'}%`;
 export function money(v: number, symbol = true) {

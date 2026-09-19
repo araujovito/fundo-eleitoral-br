@@ -49,6 +49,26 @@ def exportar(destino: Path, raiz: str = HF, anos: tuple[int, ...] = (2018, 2022,
         electorate = dict(duckdb.sql(
             f"SELECT sg_uf, qt_eleitores FROM '{DIMENSOES}/eleitorado.parquet' WHERE ano={ano}"
         ).fetchall())
+        # Cadeiras vêm de eleitos no ciclo; em 2026 ainda não há resultado e
+        # a referência recua ao ciclo anterior (ADR-012).
+        seats = {}
+        for office in sorted({cell["office"] for cell in cells if cell["office"]}):
+            for seat_year in (ano, ano - 4, ano - 8):
+                source = caminho(raiz, seat_year, "consulta_cand")
+                try:
+                    rows = duckdb.sql(f"""
+                        SELECT upper(trim(sg_uf)), count(*)
+                        FROM (SELECT DISTINCT sq_candidato, sg_uf FROM '{source}'
+                              WHERE upper(trim(ds_cargo)) = '{office}'
+                                AND ds_sit_tot_turno ILIKE 'ELEITO%')
+                        WHERE upper(trim(sg_uf)) <> 'BR'
+                        GROUP BY 1
+                    """).fetchall()
+                except duckdb.Error:
+                    continue
+                if rows:
+                    seats[office] = {"year": seat_year, "byUf": dict(rows)}
+                    break
         # Eficiência restrita a cargos proporcionais, comparáveis em turno único.
         efficiency = []
         if ano in (2018, 2022):
@@ -60,6 +80,25 @@ def exportar(destino: Path, raiz: str = HF, anos: tuple[int, ...] = (2018, 2022,
                                    "value": round(row.metricas.total_fefc, 2),
                                    "votes": row.metricas.total_votos,
                                    "candidates": row.metricas.n_candidaturas})
+        # Sínteses dos recortes existentes: cálculo fica no Python, nunca no navegador.
+        from .concentracao import concentracao_fefc
+        concentration = [
+            {"party": row.partido, "gini": round(row.metricas.gini, 4),
+             "coverage": round(row.metricas.cobertura_pct, 2),
+             "top10": round(row.metricas.top_10pct_pct, 2)}
+            for row in concentracao_fefc(ano, raiz=raiz, minimo_reais=20e6)
+        ]
+        renewal = []
+        if ano in (2022, 2026):
+            from .renovacao import distribuicao_renovacao
+            renewal = [
+                {"profile": row.perfil, "value": round(row.metricas.total_fefc, 2),
+                 "candidates": row.metricas.n_candidaturas,
+                 "share": round(row.metricas.pct_fefc, 2)}
+                for row in distribuicao_renovacao(
+                    ano, raiz=raiz, por=(), cargos=("DEPUTADO FEDERAL",)
+                )
+            ]
         # Canais declarados, sem inferir que auto-receitas são dinheiro novo.
         flows = defaultdict(float)
         for tabela, tipo in (("receitas_orgaos_partidarios", "Diretório"),
@@ -85,7 +124,8 @@ def exportar(destino: Path, raiz: str = HF, anos: tuple[int, ...] = (2018, 2022,
                 flows[key] += value
         resultado["years"][str(ano)] = {
             "cells": sorted(cells, key=lambda x: (x["party"], x["uf"] or "", x["office"] or "")),
-            "electorate": electorate, "efficiency": efficiency,
+            "electorate": electorate, "seats": seats, "efficiency": efficiency,
+            "concentration": concentration, "renewal": renewal,
             "flows": [{"party": p, "donorParty": dp, "source": s, "target": t,
                        "value": round(v, 2)} for (p, dp, s, t), v in flows.items()],
         }
