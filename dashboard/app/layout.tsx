@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   icons: {icon: '/favicon.svg'},
-  title: 'Observatório • Fundo Eleitoral',
-  description: 'Explore a alocação do FEFC por partido, território e representatividade. Dados públicos do TSE nos ciclos de 2018, 2022 e 2026.',
+  title: 'Festa da Democracia',
+  description: 'Explore como o fundo eleitoral chega a partidos, territórios e candidaturas. Dados públicos do TSE nos ciclos de 2018, 2022 e 2026.',
 };
 
 export default function RootLayout({

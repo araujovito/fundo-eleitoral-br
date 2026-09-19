@@ -1006,6 +1006,16 @@ th {
   }
 }
 
+/* Festa da Democracia: contraste de jornal mural, preto e laranja. */
+:root { --background: #11100f; --foreground: #f9f2e9; --card: #1b1917; --primary: #ff5a1f; --muted: #28231f; --muted-foreground: #c7b8aa; --border: #443a33; }
+body { background: #11100f; color: #f9f2e9; }
+.masthead { background: #ff5a1f; color: #160d09; border-bottom-color: #f6c441; }.brand-icon { color: #160d09; border-color: #160d09; border-radius: 50%; }.brand b, .masthead-right { color: #160d09; }.live-dot, .tiny-dot, .edition-dot { background: #160d09; }
+.workspace { background: radial-gradient(circle at 88% 0%, #ff5a1f1f, transparent 27%); }.page-title p, .edition small { color: #c7b8aa; }.eyebrow { color: #ff8d66; } h1 { color: #fff5eb; font-family: Georgia, 'Times New Roman', serif; font-size: 39px; }
+.toolbar, .panel, .stat, .method-card { background: #1b1917; border-color: #443a33; }.toolbar { border-radius: 0; border-left: 4px solid #ff5a1f; }.filter-mark, .filter > span, .stat-label, .panel-head p, .chart-note, .table-tools > span { color: #c7b8aa; }.filter [data-slot=select-trigger] { background: #1b1917; color: #fff5eb; }.navigation { border-bottom-color: #443a33; }.navigation [data-active] { color: #ff6a35; }.navigation [data-active]:after { background: #ff5a1f !important; }
+.story-lede { background: #ff5a1f; color: #160d09; box-shadow: none; border-radius: 0; }.story-kicker, .story-number strong, .reading-cards span { color: #160d09; }.story-main p, .story-main p b, .story-number span, .reading-cards b, .reading-cards p { color: #160d09; }.story-main h2, .story-number strong { color: #160d09; }.story-main, .reading-cards article, .story-number { border-color: #160d0933; }
+.accent-stat, .territory-insight { background: #ff5a1f; border-color: #ff5a1f; color: #160d09; }.accent-stat .stat-label, .accent-stat .stat-label svg, .accent-stat p, .territory-insight h2, .territory-insight p, .territory-insight strong, .territory-insight small { color: #160d09; }.insight, .info, .source-links { background: #2b2520; border-color: #55473d; color: #f9f2e9; }.insight strong, .insight p, .insight .eyebrow { color: #ff8d66; }
+th { background: #28231f !important; color: #d8c5b3 !important; } tr { border-color: #443a33 !important; } td { color: #f4eadf; }.bar-track { background: #443a33; }.bar-track i { background: #ff5a1f; }.index-pill.positive { background: #ff5a1f22; color: #ff9b76; } footer { border-color: #443a33; color: #c7b8aa; }
+
 .story-lede { background: #0f2d49; color: #f7fbff; border-radius: 12px; overflow: hidden; margin: 0 0 22px; box-shadow: 0 12px 30px #17395715; }
 .story-kicker { display: flex; align-items: center; gap: 8px; color: #a7d8d6; font-size: 12px; font-weight: 700; letter-spacing: 1.35px; padding: 20px 28px 0; }
 .story-main { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(210px, .7fr); gap: 42px; padding: 18px 28px 27px; border-bottom: 1px solid #ffffff24; }
