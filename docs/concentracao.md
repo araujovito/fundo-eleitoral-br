@@ -102,3 +102,16 @@ Não usamos neste estágio uma referência externa que publique Gini ou HHI por
 partido e UF para conferência direta. As métricas foram verificadas com
 casos sintéticos de igualdade perfeita, concentração máxima, candidaturas sem
 repasse, repasses múltiplos e duplicatas no cadastro.
+
+## Correção: repasse entre candidaturas (ADR-009)
+
+A primeira versão somava como FEFC recebido tudo que vinha marcado como
+`FUNDO ESPECIAL`, inclusive o que uma candidatura repassou a outra — dinheiro
+já contado quando o partido o distribuiu. A medida agora exclui esse repasse
+por padrão.
+
+O efeito sobre o total é modesto (+1,4% a +8,3% conforme o ciclo), mas o
+efeito sobre a *medida* é enviesado numa direção só: incluir o repasse sempre
+reduz o Gini, porque as transferências saem de quem recebeu muito para
+candidaturas menores. Quem quiser reconciliar com o total bruto do fundo usa
+`incluir_repasse_entre_candidatos=True`.

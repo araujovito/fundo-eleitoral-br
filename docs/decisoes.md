@@ -158,3 +158,36 @@ truque seria incorreto se a entrada fosse UTF-8.
 **Também:** a conversão passou a pular tabelas já convertidas. Depois de um
 processo morto no meio, reexecutar retoma de onde parou em vez de refazer o
 que já estava pronto.
+
+## ADR-009 — Repasse entre candidaturas fica fora da concentração
+
+**Contexto.** Parte do que o TSE marca como `FUNDO ESPECIAL` chega com
+`ds_origem_receita = 'Recursos de outros candidatos'`: o partido repassou ao
+candidato A, que transferiu a B. Somar os dois conta os mesmos reais duas
+vezes.
+
+**Quanto pesa:**
+
+| ciclo | FEFC sem dupla contagem | com | inflação |
+|---|---|---|---|
+| 2018 | R$ 1,694 bi | R$ 1,834 bi | +8,26% |
+| 2022 | R$ 4,741 bi | R$ 4,903 bi | +3,42% |
+| 2026 (parcial) | R$ 4,611 bi | R$ 4,676 bi | +1,41% |
+
+**Decisão.** Excluir por padrão. `incluir_repasse_entre_candidatos=True`
+restaura o comportamento antigo, para reconciliar com o total bruto do fundo.
+
+**Por quê — e o efeito é maior do que o total sugere.** O erro não é só de
+soma: quem repassou aparece como se tivesse ficado com o dinheiro, e quem
+recebeu aparece duas vezes. Medido, o viés é **sistemático numa direção só**:
+incluir o repasse sempre *reduz* o Gini, porque as transferências correm de
+quem recebeu muito para candidaturas menores. Ou seja, a dupla contagem faz
+todo partido parecer mais igualitário do que é — exatamente o oposto do que a
+análise quer medir.
+
+Casos extremos: PCdoB em 2018 passa de Gini 0,951 para 0,889 (−0,062, com o
+total inflado em 24%); PSB em 2022, de 0,810 para 0,785.
+
+**Observação sobre 2018.** A inflação de 8,26% é o dobro da de 2022. Vale
+investigar se reflete mudança de regra entre ciclos ou apenas o FEFC menor
+daquele ano — não está respondido.

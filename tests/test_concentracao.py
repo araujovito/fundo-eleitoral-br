@@ -65,11 +65,13 @@ def _gravar_base_sintetica(raiz):
     """)
     con.sql("""
         CREATE TABLE rec AS SELECT * FROM (VALUES
-          ('1', 'FUNDO ESPECIAL', '60,00'),
-          ('1', 'FUNDO ESPECIAL', '40,00'),
-          ('2', 'FUNDO ESPECIAL', '50,00'),
-          ('2', 'OUTROS RECURSOS', '999,00')
-        ) t(sq_candidato, ds_fonte_receita, vr_receita)
+          ('1', 'FUNDO ESPECIAL', 'Recursos de partido político', '60,00'),
+          ('1', 'FUNDO ESPECIAL', 'Recursos de partido político', '40,00'),
+          ('2', 'FUNDO ESPECIAL', 'Recursos de partido político', '50,00'),
+          -- repasse de uma candidatura para outra: os mesmos reais ja contados
+          ('2', 'FUNDO ESPECIAL', 'Recursos de outros candidatos', '30,00'),
+          ('2', 'OUTROS RECURSOS', 'Recursos de pessoas físicas', '999,00')
+        ) t(sq_candidato, ds_fonte_receita, ds_origem_receita, vr_receita)
     """)
     con.execute(f"COPY cand TO '{pasta / 'consulta_cand.parquet'}' (FORMAT PARQUET)")
     con.execute(f"COPY rec TO '{pasta / 'receitas_candidatos.parquet'}' (FORMAT PARQUET)")
@@ -129,3 +131,37 @@ def test_filtra_cargo_uf_e_tamanho_minimo_do_grupo(tmp_path):
 def test_rejeita_dimensao_invalida(tmp_path):
     with pytest.raises(ValueError, match="dimensoes invalidas"):
         concentracao_fefc(2022, raiz=tmp_path, por=("genero",))
+
+
+def test_exclui_repasse_entre_candidaturas_por_padrao(tmp_path):
+    _gravar_base_sintetica(tmp_path)
+
+    p = next(x for x in concentracao_fefc(2022, raiz=tmp_path, minimo_reais=1)
+             if x.partido == "P")
+    # Os R$ 30 que a candidatura 2 recebeu de outra candidatura ja haviam sido
+    # contados quando o partido os repassou: entram uma vez so.
+    assert p.metricas.total == 150
+
+
+def test_flag_restaura_a_dupla_contagem_para_reconciliar(tmp_path):
+    _gravar_base_sintetica(tmp_path)
+
+    p = next(x for x in concentracao_fefc(2022, raiz=tmp_path, minimo_reais=1,
+                                          incluir_repasse_entre_candidatos=True)
+             if x.partido == "P")
+    assert p.metricas.total == 180
+
+
+def test_repasse_distorce_a_medida_de_desigualdade(tmp_path):
+    _gravar_base_sintetica(tmp_path)
+
+    sem = next(x for x in concentracao_fefc(2022, raiz=tmp_path, minimo_reais=1)
+               if x.partido == "P")
+    com = next(x for x in concentracao_fefc(2022, raiz=tmp_path, minimo_reais=1,
+                                            incluir_repasse_entre_candidatos=True)
+               if x.partido == "P")
+    # A dupla contagem move o Gini, e a direcao depende de quem recebeu o
+    # repasse: aqui ele vai para a candidatura menor, entao o partido parece
+    # mais igualitario do que e. Se fosse para a maior, pareceria mais
+    # concentrado. Nos dois casos a medida deixa de ser interpretavel.
+    assert com.metricas.gini < sem.metricas.gini

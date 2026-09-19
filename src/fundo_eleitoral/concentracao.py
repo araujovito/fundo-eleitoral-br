@@ -26,6 +26,10 @@ from .analise import HF
 _VALOR = "CAST(replace(vr_receita, ',', '.') AS DOUBLE)"
 _DIMENSOES = {"uf": "uf", "cargo": "cargo"}
 
+# FEFC que chega a uma candidatura vindo de outra ja foi contado quando o
+# partido o repassou da primeira vez. Ver ADR-009.
+_ORIGEM_REPASSE = "Recursos de outros candidatos"
+
 
 @dataclass(frozen=True)
 class MetricasConcentracao:
@@ -126,6 +130,7 @@ def concentracao_fefc(
     apenas_aptas: bool = False,
     cargos: tuple[str, ...] = (),
     ufs: tuple[str, ...] = (),
+    incluir_repasse_entre_candidatos: bool = False,
 ) -> list[LinhaConcentracao]:
     """Mede a concentracao do FEFC dentro de cada partido.
 
@@ -139,6 +144,14 @@ def concentracao_fefc(
     ``cargos`` e ``ufs`` permitem comparar apenas disputas equivalentes. Isso
     e essencial para estudar puxadores: misturar Presidencia, governos e
     eleicoes proporcionais torna a concentracao nacional pouco interpretavel.
+
+    ``incluir_repasse_entre_candidatos`` restaura a dupla contagem: parte do
+    que o TSE marca como FUNDO ESPECIAL chega com origem "Recursos de outros
+    candidatos", isto e, dinheiro que o partido ja repassou uma vez e que a
+    candidatura A transferiu para B. Somar os dois conta os mesmos reais duas
+    vezes e faz quem repassou parecer ter ficado com o dinheiro, o que distorce
+    justamente a medida de concentracao. O padrao e excluir; ligue a flag
+    apenas para reconciliar com o total bruto do fundo (ADR-009).
     """
     invalidas = set(por) - _DIMENSOES.keys()
     if invalidas:
@@ -151,6 +164,10 @@ def concentracao_fefc(
     filtro = ""
     if apenas_aptas and _tem_candidaturas_aptas(cand):
         filtro = "WHERE ds_situacao_candidatura ILIKE 'APTO%'"
+    filtro_repasse = (
+        "" if incluir_repasse_entre_candidatos
+        else f"AND ds_origem_receita <> '{_ORIGEM_REPASSE}'"
+    )
 
     # O GROUP BY elimina duplicatas reais do cadastro: em 2018 e 2022 alguns
     # sq_candidato aparecem duas vezes, sem divergencia de partido/UF/cargo.
@@ -168,6 +185,7 @@ def concentracao_fefc(
           SELECT sq_candidato, sum({_VALOR}) AS valor
           FROM '{rec}'
           WHERE ds_fonte_receita = 'FUNDO ESPECIAL'
+          {filtro_repasse}
           GROUP BY 1
         )
         SELECT c.partido, c.uf, c.cargo, coalesce(f.valor, 0.0) AS valor
