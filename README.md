@@ -19,9 +19,27 @@ este projeto persegue é *onde* cada partido apostou o dinheiro:
 
 ## Estado atual
 
-Ingestão implementada e com as 9 fontes dos três ciclos verificadas
-(2018, 2022 e 2026 — este último ainda em prestação parcial). Análise
-ainda não. Ver
+Ingestão completa nos três ciclos, dados publicados em
+[huggingface.co/datasets/buscafe/fundo-eleitoral-br](https://huggingface.co/datasets/buscafe/fundo-eleitoral-br)
+(27 tabelas, 364 MB, público). Primeiro recorte de análise pronto: cota de gênero.
+
+### Achado: a cota de gênero não é uma regra de 30%
+
+| ciclo | FEFC | a candidaturas femininas |
+|---|---|---|
+| 2018 | R$ 1,83 bi | 26,7% |
+| 2022 | R$ 4,90 bi | 30,8% |
+| 2026 (parcial) | R$ 4,68 bi | 34,5% |
+
+O agregado sugere cumprimento a partir de 2022. Mas a regra (ADI 5617) exige
+repasse **proporcional** às candidaturas femininas do partido, com 30% apenas
+como piso. Medido assim, **15 dos 24 partidos analisados descumpriram em
+2022** — e 9 deles estavam acima dos 30%, portanto invisíveis sob a leitura
+simplificada. O PT repassou 27,2% com 37,1% de candidaturas; o MDB, 31,7%
+com 34,2%.
+
+Reproduz com `python -m fundo_eleitoral.analise` — lê direto do Hugging Face,
+sem ingestão local. Ver
 [docs/decisoes.md](docs/decisoes.md) para as decisões de arquitetura e as
 pendências conhecidas.
 
@@ -35,6 +53,7 @@ o porquê está em [ADR-001](docs/decisoes.md#adr-001--ingestão-e-análise-são
 fontes.py      catálogo de URLs e dialeto dos CSVs do TSE
 ingestao.py    baixa → extrai → converte para Parquet  (roda raro)
 publicacao.py  sobe os Parquet para um dataset público no Hugging Face
+analise.py     consultas sobre os Parquet (lê do HF, não baixa nada)
 dados/         ignorado pelo git (ADR-002)
 ```
 

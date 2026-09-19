@@ -47,3 +47,22 @@ def test_cartao_do_dataset_menciona_as_armadilhas():
     assert "despesas_pagas" in cartao
     assert "dupla contagem" in cartao
     assert "2018, 2022" in cartao
+
+
+def test_piso_e_o_maior_entre_30_e_a_proporcao():
+    from fundo_eleitoral.analise import piso_do_partido
+
+    # A regra nao e um 30% fixo: quem lanca mais mulheres deve repassar mais.
+    assert piso_do_partido(22.0) == 30.0
+    assert piso_do_partido(37.1) == 37.1
+
+
+def test_partido_acima_de_30_pode_estar_irregular():
+    from fundo_eleitoral.analise import LinhaPartido
+
+    # Caso real do PT em 2022: 27,2% repassado com 37,1% de candidaturas.
+    pt = LinhaPartido("PT", 546.7, 27.2, 37.1)
+    assert not pt.cumpre
+    # E o caso que o piso fixo de 30% esconderia:
+    mdb = LinhaPartido("MDB", 378.0, 31.7, 34.2)
+    assert mdb.pct_repassado > 30 and not mdb.cumpre
