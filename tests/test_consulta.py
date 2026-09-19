@@ -4,7 +4,9 @@ from pathlib import Path
 
 import duckdb
 
-from fundo_eleitoral import analise, concentracao, raca, renovacao
+from pathlib import Path
+
+from fundo_eleitoral import consulta
 from fundo_eleitoral.consulta import ORIGEM_REPASSE, caminho, clausula_aptidao, cte_fefc
 
 
@@ -48,11 +50,19 @@ def test_caminho_monta_o_parquet_do_ciclo():
         "base/2022/receitas_candidatos.parquet"
 
 
-def test_todos_os_recortes_leem_a_mesma_definicao():
-    # O defeito do ADR-009 se espalhou porque cada recorte copiou a consulta do
-    # vizinho. Se um modulo voltar a definir a sua propria, este teste avisa.
-    for modulo in (analise, concentracao, raca, renovacao):
-        fonte = Path(modulo.__file__).read_text(encoding="utf-8")
-        assert "_VALOR = " not in fonte, modulo.__name__
-        assert "def _base(" not in fonte, modulo.__name__
-        assert "ds_fonte_receita = 'FUNDO ESPECIAL'" not in fonte, modulo.__name__
+def test_nenhum_modulo_redefine_a_consulta():
+    """Varre o pacote inteiro, em vez de listar modulos a mao.
+
+    A primeira versao deste teste enumerava os quatro recortes existentes na
+    epoca. Quando surgiu um quinto modulo, ele redefiniu _VALOR e a string da
+    fonte sem que nada avisasse -- o teste so protegia o passado.
+    """
+    pacote = Path(consulta.__file__).parent
+    for arquivo in sorted(pacote.glob("*.py")):
+        if arquivo.name == "consulta.py":
+            continue
+        fonte = arquivo.read_text(encoding="utf-8")
+        assert 'def _base(' not in fonte, arquivo.name
+        assert '_VALOR = "CAST' not in fonte, arquivo.name
+        assert "'FUNDO ESPECIAL'" not in fonte, arquivo.name
+        assert '"FUNDO ESPECIAL"' not in fonte, arquivo.name

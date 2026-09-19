@@ -14,10 +14,14 @@ from pathlib import Path
 
 import duckdb
 
-from .consulta import HF, caminho
+from .consulta import FONTE_FEFC, HF, VALOR, caminho
 
-_VALOR = "CAST(replace(vr_receita, ',', '.') AS DOUBLE)"
-_FUNDO = "FUNDO ESPECIAL"
+# Este recorte e o unico que PRECISA do repasse entre candidaturas: ele e o
+# objeto de estudo, nao ruido (ADR-009). Por isso monta a propria consulta em
+# vez de usar cte_fefc -- mas a definicao de valor e de fonte vem do lugar
+# unico, para nao repetir o erro que o ADR-010 descreve.
+_VALOR = VALOR
+_FUNDO = FONTE_FEFC
 DIRETORIO = "diretorio"
 CANDIDATURAS = "candidaturas"
 FONTE = "fonte"
