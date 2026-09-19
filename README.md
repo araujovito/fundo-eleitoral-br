@@ -21,7 +21,8 @@ este projeto persegue é *onde* cada partido apostou o dinheiro:
 
 Ingestão completa nos três ciclos, dados publicados em
 [huggingface.co/datasets/buscafe/fundo-eleitoral-br](https://huggingface.co/datasets/buscafe/fundo-eleitoral-br)
-(27 tabelas, 364 MB, público). Primeiro recorte de análise pronto: cota de gênero.
+(27 tabelas, 364 MB, público). Dois recortes de análise prontos: cota de gênero
+e concentração x pulverização do FEFC.
 
 ### Achado: a cota de gênero não é uma regra de 30%
 
@@ -43,6 +44,22 @@ sem ingestão local. Ver
 [docs/decisoes.md](docs/decisoes.md) para as decisões de arquitetura e as
 pendências conhecidas.
 
+### Achado: o FEFC ficou mais pulverizado nas chapas federais
+
+Nas células `partido x UF` para deputado federal com ao menos 10 candidaturas e
+R$ 1 milhão de fundo, o Gini mediano caiu de **0,761 em 2018 para 0,629 em
+2022**. A cobertura mediana subiu de 73,3% para 92,1%, enquanto a parcela dos
+10% mais financiados caiu de 71,3% para 51,4%.
+
+O retrato parcial de 2026 mantém o movimento, mas ainda não é comparável a uma
+prestação final. Veja método, exemplos e ressalvas em
+[docs/concentracao.md](docs/concentracao.md). Reproduz com:
+
+```bash
+python -m fundo_eleitoral.concentracao --ano 2022 --por uf cargo \
+  --cargo "DEPUTADO FEDERAL" --minimo-milhoes 1 --minimo-candidaturas 10
+```
+
 ## Arquitetura em uma frase
 
 Ingestão baixa os ZIPs do TSE e escreve Parquet; a análise só lê Parquet, via
@@ -54,6 +71,7 @@ fontes.py      catálogo de URLs e dialeto dos CSVs do TSE
 ingestao.py    baixa → extrai → converte para Parquet  (roda raro)
 publicacao.py  sobe os Parquet para um dataset público no Hugging Face
 analise.py     consultas sobre os Parquet (lê do HF, não baixa nada)
+concentracao.py mede concentração do FEFC por partido, UF e cargo
 dados/         ignorado pelo git (ADR-002)
 ```
 

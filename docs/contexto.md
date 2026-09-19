@@ -41,23 +41,26 @@ resumo: a regra não é um piso de 30%, é proporcionalidade às candidaturas
 femininas com 30% de mínimo, e sob o critério correto 15 dos 24 partidos
 descumpriram em 2022 — contra 6 sob a leitura simplificada.
 
+**Segundo recorte: concentração x pulverização.** A análise inclui candidaturas
+sem repasse e calcula cobertura, Gini, HHI, número efetivo de recebedores e
+participação dos 10% do topo. Nas chapas a deputado federal, o Gini mediano por
+partido e UF caiu de 0,761 em 2018 para 0,629 em 2022. Método completo em
+[concentracao.md](concentracao.md).
+
 ## O que pretendemos fazer
 
 Em ordem de interesse, não necessariamente de execução:
 
-1. **Concentração x pulverização.** O partido apostou em poucos puxadores de
-   voto ou espalhou para maximizar o quociente eleitoral? Medida natural: Gini
-   ou índice de Herfindahl do FEFC dentro de cada partido, por UF e cargo.
-2. **Incumbentes x estreantes.** O fundo financia renovação ou reeleição?
+1. **Incumbentes x estreantes.** O fundo financia renovação ou reeleição?
    Exige cruzar `consulta_cand` entre ciclos por CPF.
-3. **Proporcionalidade racial.** Mesmo método da cota de gênero, usando
+2. **Proporcionalidade racial.** Mesmo método da cota de gênero, usando
    `ds_cor_raca`, que já vem nas receitas.
-4. **Prioridade geográfica.** Quais UFs recebem acima do seu peso no
+3. **Prioridade geográfica.** Quais UFs recebem acima do seu peso no
    eleitorado — e se isso acompanha disputa apertada ou reduto consolidado.
-5. **Eficiência.** Reais por voto obtido, por partido e por perfil de
+4. **Eficiência.** Reais por voto obtido, por partido e por perfil de
    candidatura. Depende de ingerir os resultados
    (`votacao_candidato_munzona`), ainda fora do catálogo.
-6. **O caminho do dinheiro.** Repasse nacional → estadual → candidatura, com
+5. **O caminho do dinheiro.** Repasse nacional → estadual → candidatura, com
    as tabelas de órgãos partidários e de doador originário. É a parte mais
    difícil e a mais reveladora.
 
