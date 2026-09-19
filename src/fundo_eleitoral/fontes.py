@@ -71,6 +71,33 @@ def fontes_do_ano(ano: int) -> list[Fonte]:
     ]
 
 
+def fontes_auxiliares(ano: int) -> list[Fonte]:
+    """Resultados e eleitorado: insumos das analises de eficiencia e geografia.
+
+    Ao contrario da prestacao de contas, estes pacotes NAO trazem arquivo
+    _BRASIL -- so um CSV por UF. Aqui concatenar as UFs e o caminho correto, e
+    nao o erro que o ADR-006 descreve; a lista de tabelas fica vazia porque a
+    selecao e por prefixo, feita em dimensoes.py.
+
+    `votacao_candidato_munzona` existe para 2026, mas vem vazio: a eleicao
+    ainda nao aconteceu.
+    """
+    return [
+        Fonte(
+            chave=f"votacao_{ano}",
+            url=f"{BASE}/votacao_candidato_munzona/votacao_candidato_munzona_{ano}.zip",
+            ano=ano,
+            tabelas=(),
+        ),
+        Fonte(
+            chave=f"eleitorado_{ano}",
+            url=f"{BASE}/perfil_eleitorado/perfil_eleitorado_{ano}.zip",
+            ano=ano,
+            tabelas=(),
+        ),
+    ]
+
+
 def todas_fontes(anos: tuple[int, ...] = ANOS_ELEICAO) -> list[Fonte]:
     return [f for ano in anos for f in fontes_do_ano(ano)]
 

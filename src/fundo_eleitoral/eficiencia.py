@@ -14,10 +14,13 @@ from pathlib import Path
 
 import duckdb
 
-from .consulta import HF, caminho, clausula_aptidao, cte_fefc
+from .consulta import DIMENSOES, HF, caminho, clausula_aptidao, cte_fefc
 
 RAIZ = Path(__file__).resolve().parents[2]
-DIMENSAO_VOTOS = RAIZ / "dados" / "dimensoes" / "votos_candidatos.parquet"
+# Derivada do TSE por dimensoes.py e publicada junto com o resto dos
+# dados (ADR-011). Antes vinha versionada no git, sem codigo que a
+# gerasse -- nao dava para conferir nem para atualizar.
+DIMENSAO_VOTOS = f"{DIMENSOES}/votos_candidatos.parquet"
 _DIMENSOES = {"partido": 0, "uf": 1, "cargo": 2, "perfil": 3}
 
 ELEITO = "eleito"
@@ -50,7 +53,7 @@ def _tem_votos(ano: int, dimensao: str | Path) -> bool:
     if not caminho_dimensao.exists():
         raise FileNotFoundError(
             f"dimensao de votos ausente: {caminho_dimensao}. "
-            "O repositorio deve conter dados/dimensoes/votos_candidatos.parquet."
+            "Gere com: python -m fundo_eleitoral.dimensoes --ano <ano>"
         )
     return bool(duckdb.sql(
         f"SELECT count(*) > 0 FROM '{caminho_dimensao}' WHERE ano = {ano}"

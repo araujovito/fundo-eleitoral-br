@@ -244,3 +244,42 @@ recortes, nos três ciclos, antes e depois: byte a byte idêntica. Um teste em
 candidatura, e não cabe na `cte_fefc` — ela usa as constantes compartilhadas
 mas mantém a própria consulta. Forçar o encaixe teria produzido um helper com
 parâmetros demais para servir a dois casos.
+
+## ADR-011 — Dimensões derivadas do TSE, não versionadas
+
+**Contexto.** `geografia.py` e `eficiencia.py` precisam de eleitorado por UF e
+de votos por candidatura, que não estão na prestação de contas. Os dois Parquet
+chegaram ao projeto **versionados no git, sem nenhum código que os gerasse** —
+não davam para conferir, atualizar nem reproduzir.
+
+**Decisão.** `dimensoes.py` deriva as duas tabelas de
+`perfil_eleitorado` e `votacao_candidato_munzona`, publicadas pelo TSE. O
+resultado vai para o dataset no Hugging Face, junto com o resto; o `.gitignore`
+volta a ser absoluto.
+
+**Por que importava.** Ao reproduzir, os números divergiram:
+
+| | versionado | derivado |
+|---|---|---|
+| eleitorado 2018 | 146,81 mi | 146,81 mi |
+| eleitorado 2022 | 155,76 mi | 155,76 mi |
+| votos 2018 | 602,7 mi | 720,7 mi |
+| votos 2022 | 564,2 mi | 714,2 mi |
+
+O eleitorado batia exatamente. Os votos não: faltavam **presidente e
+governador** — as disputas majoritárias, que são as que mais recebem FEFC. A
+análise de eficiência media R$/voto sem a eleição presidencial, e nada no
+projeto podia apontar isso, porque não havia como refazer o arquivo.
+
+**A armadilha do `_BRASIL`, invertida.** Em `perfil_eleitorado` existe um
+arquivo `_BRASIL` que é a **união** das UFs: somá-lo junto duplica o total
+exato (312,9 mi de eleitores em vez de 156,5 mi). Na prestação de contas, o
+arquivo de mesmo sufixo é um **superconjunto** e usá-lo sozinho é o correto
+(ADR-006). Mesmo nome, tratamento oposto — conferir contra referência externa é
+o que separa um do outro.
+
+**Outras diferenças entre ciclos:** 2018 vem num CSV único, sem divisão por UF,
+e chama a coluna de `qt_eleitores_perfil` em vez de `qt_eleitores`; `ZZ`
+(exterior) precisa sair por linha, não só por nome de arquivo; e
+`votacao_candidato_munzona_2026` existe mas está vazio, porque a eleição ainda
+não aconteceu.

@@ -16,7 +16,10 @@ from pathlib import Path
 import duckdb
 
 # Dataset publico gerado por este projeto; a analise roda sem ingestao local.
-HF = "hf://datasets/buscafe/fundo-eleitoral-br/parquet"
+DATASET = "hf://datasets/buscafe/fundo-eleitoral-br"
+HF = f"{DATASET}/parquet"
+# Dimensoes derivadas (votos, eleitorado): ver dimensoes.py e ADR-011.
+DIMENSOES = f"{DATASET}/dimensoes"
 
 # Tudo e string no Parquet por decisao explicita (ADR-004): vr_receita vem como
 # texto com virgula decimal.

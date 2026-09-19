@@ -14,10 +14,13 @@ from pathlib import Path
 
 import duckdb
 
-from .consulta import HF, caminho, clausula_aptidao, cte_fefc
+from .consulta import DIMENSOES, HF, caminho, clausula_aptidao, cte_fefc
 
 RAIZ = Path(__file__).resolve().parents[2]
-DIMENSAO_ELEITORADO = RAIZ / "dados" / "dimensoes" / "eleitorado.parquet"
+# Derivada do TSE por dimensoes.py e publicada junto com o resto dos
+# dados (ADR-011). Antes vinha versionada no git, sem codigo que a
+# gerasse -- nao dava para conferir nem para atualizar.
+DIMENSAO_ELEITORADO = f"{DIMENSOES}/eleitorado.parquet"
 UFS_BRASIL = frozenset((
     "AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MG", "MS", "MT",
     "PA", "PB", "PE", "PI", "PR", "RJ", "RN", "RO", "RR", "RS", "SC", "SE", "SP", "TO",
@@ -50,7 +53,7 @@ def _eleitorado_por_uf(ano: int, dimensao: str | Path) -> dict[str, int]:
     if not caminho_dimensao.exists():
         raise FileNotFoundError(
             f"dimensao de eleitorado ausente: {caminho_dimensao}. "
-            "O repositorio deve conter dados/dimensoes/eleitorado.parquet."
+            "Gere com: python -m fundo_eleitoral.dimensoes --ano <ano>"
         )
     rows = duckdb.sql(f"""
         SELECT upper(trim(sg_uf)), cast(qt_eleitores AS BIGINT)

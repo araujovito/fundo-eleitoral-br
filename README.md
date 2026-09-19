@@ -24,7 +24,7 @@ transferência entre candidaturas fica fora ([ADR-009](docs/decisoes.md)).
 
 Ingestão completa nos três ciclos, dados publicados em
 [huggingface.co/datasets/buscafe/fundo-eleitoral-br](https://huggingface.co/datasets/buscafe/fundo-eleitoral-br)
-(27 tabelas, 364 MB, público). Quatro recortes de análise prontos: cota de
+(27 tabelas mais as dimensões de eleitorado e votos, público). Quatro recortes de análise prontos: cota de
 gênero, concentração x pulverização, incumbentes x novos nomes e
 proporcionalidade racial, prioridade geográfica, eficiência eleitoral e o
 caminho do dinheiro entre diretórios e candidaturas.
@@ -149,7 +149,8 @@ DuckDB, sem banco servidor. As duas etapas são deliberadamente separadas —
 o porquê está em [ADR-001](docs/decisoes.md#adr-001--ingestão-e-análise-são-etapas-separadas).
 
 ```
-consulta.py    definição única da consulta de FEFC, usada pelos 4 recortes
+consulta.py    definição única da consulta de FEFC, usada por todos os recortes
+dimensoes.py   deriva eleitorado e votos do TSE (ADR-011)
 fontes.py      catálogo de URLs e dialeto dos CSVs do TSE
 ingestao.py    baixa → extrai → converte para Parquet  (roda raro)
 publicacao.py  sobe os Parquet para um dataset público no Hugging Face

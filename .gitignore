@@ -3,9 +3,8 @@
 *.zip
 *.csv
 *.parquet
-!/dados/
-!/dados/dimensoes/
-!/dados/dimensoes/*.parquet
+# Nada de dados no git, sem excecao: as dimensoes derivadas vao para o
+# dataset publico junto com o resto (ADR-011).
 
 __pycache__/
 *.py[cod]
