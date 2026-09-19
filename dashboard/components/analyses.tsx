@@ -75,11 +75,15 @@ export function Territory({
   cells,
   electorate,
   office,
+  offices,
+  onOfficeChange,
   seats,
 }: {
   cells: Cell[];
   electorate: Record<string, number>;
   office: string;
+  offices: string[];
+  onOfficeChange: (office: string) => void;
   seats?: SeatReference;
 }) {
   const domestic = cells.filter((c) => c.uf in electorate),
@@ -131,10 +135,29 @@ export function Territory({
       </div>
       {!hasSeats && (
         <div className="notice info">
-          <CircleHelp size={17} /> Selecione um único cargo para comparar o fundo eleitoral
-          também com as cadeiras em disputa. Com vários cargos, o eleitorado é
-          apenas uma referência descritiva — não mede sozinho a estratégia
-          partidária.
+          <CircleHelp size={17} />
+          <div>
+            <b>Compare com cadeiras em disputa</b>
+            <span>
+              Escolha um cargo abaixo. Com todos os cargos, o eleitorado é
+              apenas uma referência descritiva.
+            </span>
+          </div>
+          <label className="territory-office-picker">
+            <span>Cargo</span>
+            <select
+              aria-label="Cargo para comparação territorial"
+              value={office}
+              onChange={(event) => onOfficeChange(event.target.value)}
+            >
+              <option value="Todos os cargos">Todos os cargos</option>
+              {offices.map((value) => (
+                <option value={value} key={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
       )}
       <div className="territory-grid">

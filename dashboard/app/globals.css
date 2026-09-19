@@ -1032,10 +1032,46 @@ th {
 .territory-insight small { color: #bfae9f; }
 .territory-insight .insight-divider { background: #5f4e42; }
 .method-card > span { color: #d9461d; }
+.notice.info {
+  align-items: center;
+}
+.notice.info > div {
+  display: grid;
+  gap: 3px;
+  flex: 1;
+}
+.notice.info > div b { font-size: 14px; }
+.notice.info > div span { font-size: 13px; line-height: 1.45; }
+.territory-office-picker {
+  display: grid;
+  gap: 4px;
+  min-width: 210px;
+  color: #5c2a1d;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.territory-office-picker select {
+  width: 100%;
+  appearance: auto;
+  background: #fffaf3;
+  border: 1px solid #d9461d;
+  border-radius: 0;
+  color: #241c17;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  padding: 8px 9px;
+  text-transform: none;
+}
 
 @media (max-width: 760px) {
   .navigation { flex-wrap: nowrap; overflow-x: auto; }
   .navigation [data-slot='tabs-trigger'] { height: 42px; }
+  .notice.info { align-items: flex-start; }
+  .territory-office-picker { min-width: 100%; }
 }
 
 @media (min-width: 761px) and (max-width: 1100px) {

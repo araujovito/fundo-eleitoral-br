@@ -782,6 +782,8 @@ export default function Home() {
                   cells={cells}
                   electorate={data.years[year].electorate}
                   office={office}
+                  offices={offices}
+                  onOfficeChange={setOffice}
                   seats={
                     office === 'Todos os cargos'
                       ? undefined
