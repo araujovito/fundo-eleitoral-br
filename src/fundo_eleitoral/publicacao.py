@@ -14,7 +14,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
-from datetime import date
+from datetime import UTC, datetime
 from pathlib import Path
 
 from .fontes import ANOS_ELEICAO
@@ -91,7 +91,7 @@ REPO_CODIGO = "araujovito/fundo-eleitoral-br"
 
 def montar_cartao(anos: tuple[int, ...]) -> str:
     return CARTAO.format(
-        data=date.today().isoformat(),
+        data=datetime.now(UTC).date().isoformat(),
         anos=", ".join(str(a) for a in anos),
         repo_codigo=REPO_CODIGO,
         repo_codigo_url=f"https://github.com/{REPO_CODIGO}",

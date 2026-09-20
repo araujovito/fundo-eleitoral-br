@@ -4,8 +4,6 @@ from pathlib import Path
 
 import duckdb
 
-from pathlib import Path
-
 from fundo_eleitoral import consulta
 from fundo_eleitoral.consulta import ORIGEM_REPASSE, caminho, clausula_aptidao, cte_fefc
 

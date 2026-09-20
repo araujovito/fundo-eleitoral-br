@@ -50,7 +50,7 @@ def verificar(fontes: list[Fonte]) -> int:
                 marca = "OK " if ok and assinatura else ("?  " if ok else "ERRO")
                 print(f"{marca} {r.status_code:>3} {tamanho:>12}  {f.chave}")
                 falhas += 0 if (ok and assinatura) else 1
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - uma fonte ruim nao aborta o catalogo
                 print(f"ERRO  --            ?  {f.chave}: {type(e).__name__}: {e}")
                 falhas += 1
     return falhas
@@ -182,13 +182,13 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[{fonte.chave}]")
         try:
             zip_path = baixar(fonte, DIR_BRUTO)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - registra a fonte e segue para a proxima
             print(f"  falhou: {e}")
             continue
         converter(zip_path, fonte, DIR_PARQUET / str(fonte.ano))
         if not args.manter_zip:
             zip_path.unlink()
-            print(f"  zip removido (use --manter-zip para conservar)")
+            print("  zip removido (use --manter-zip para conservar)")
 
     return 0
 

@@ -128,9 +128,9 @@ def prioridade_geografica(
     # Cadeiras so fazem sentido com um cargo unico: a comparacao com o
     # eleitorado mede malapportionment (RR elege 8 deputados com 366 mil
     # eleitores, por piso constitucional), nao escolha do partido. Ver ADR-012.
-    cadeiras, ano_cadeiras = ({}, ano)
+    cadeiras = {}
     if len(cargos) == 1:
-        cadeiras, ano_cadeiras = _cadeiras_por_uf(ano, raiz, cargos[0])
+        cadeiras, _ = _cadeiras_por_uf(ano, raiz, cargos[0])
     total_cadeiras = sum(cadeiras.values())
     cand = caminho(raiz, ano, "consulta_cand")
     receitas = caminho(raiz, ano, "receitas_candidatos")
