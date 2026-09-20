@@ -747,7 +747,7 @@ export default function Home() {
                 </div>
                 <Panel
                   title="Partido por partido"
-                  subtitle="Totais, alcance do financiamento e participação no recorte"
+                  subtitle={`A fatia do total divide o valor do partido pelos ${money(total)} do recorte selecionado`}
                   tag={`${ranking.length} partidos`}
                 >
                   <div className="table-tools">
@@ -764,7 +764,7 @@ export default function Home() {
                       <TableRow>
                         <TableHead>PARTIDO</TableHead>
                         <TableHead className="numeric">FUNDO ELEITORAL</TableHead>
-                        <TableHead>PARTICIPAÇÃO</TableHead>
+                        <TableHead>FATIA DO TOTAL</TableHead>
                         <TableHead className="numeric">CANDIDATURAS</TableHead>
                         <TableHead className="numeric">FINANCIADAS</TableHead>
                       </TableRow>
@@ -772,7 +772,9 @@ export default function Home() {
                     <TableBody>
                       {table.map((r, i) => (
                         <TableRow key={r.name}>
-                          <TableCell>
+                          <TableCell
+                            aria-label={`${r.name}: ${percent((r.value / total) * 100)} dos ${money(total)} do recorte`}
+                          >
                             <span className="rank-number">{i + 1}</span>
                             <b>{r.name}</b>
                           </TableCell>
