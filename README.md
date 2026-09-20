@@ -54,6 +54,7 @@ todo o descumprimento hoje é invisível para quem só confere o número redondo
 
 Reproduz com `python -m fundo_eleitoral.analise` — lê direto do Hugging Face,
 sem ingestão local. Ver
+[docs/metodologia.md](docs/metodologia.md) para as regras comuns e
 [docs/decisoes.md](docs/decisoes.md) para as decisões de arquitetura e as
 pendências conhecidas.
 

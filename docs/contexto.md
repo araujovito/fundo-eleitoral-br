@@ -5,7 +5,7 @@ onde vai. As decisões técnicas e o *porquê* de cada uma estão em
 [decisoes.md](decisoes.md); cada recorte tem seu próprio documento de método.
 Aqui fica o mapa.
 
-Última atualização: 19/09/2026.
+Última atualização: 20/09/2026.
 
 ## A pergunta
 
@@ -76,7 +76,7 @@ descartava a eleição presidencial (ADR-006); a dimensão de votos versionada n
 git também a omitia (ADR-011).
 
 **Nenhum desses erros foi encontrado lendo código.** Todos apareceram ao
-conferir um número contra referência externa: R$ 4,90 bi do FEFC de 2022,
+conferir um número contra referência externa: a dotação oficial do FEFC,
 156 milhões de eleitores, 513 deputados federais.
 
 ## O que pretendemos fazer
@@ -144,11 +144,10 @@ REPO=buscafe/fundo-eleitoral-br make publicar
 ## Método
 
 Uma regra vale para tudo aqui: **conferir o número contra uma referência
-externa antes de confiar nele.** O FEFC de 2022 calculado a partir de
-`ds_fonte_receita` deu R$ 4,90 bi, que é o valor real do fundo; as cadeiras
-derivadas dos eleitos dão 513, que é o tamanho da Câmara. É isso que autoriza
-usar a coluna. Quando não houver âncora externa, dizer explicitamente que não
-houve.
+externa antes de confiar nele.** A dotação oficial não é tratada como sinônimo
+de receita direta observada; a diferença entre as duas precisa ser explicada
+pelo escopo. As cadeiras derivadas dos eleitos dão 513, que é o tamanho da
+Câmara. Quando não houver âncora externa, isso deve ser dito explicitamente.
 
 Corolário aprendido na prática: **refatoração que muda número é bug.** Antes de
 mexer na consulta compartilhada, gravamos a saída dos recortes nos três ciclos

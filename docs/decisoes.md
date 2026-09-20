@@ -319,3 +319,20 @@ de candidaturas. Confere com referência externa: 513 deputados federais em 2018
 e em 2022. Quando o ciclo ainda não tem resultado — 2026 — a função recua para
 o ciclo anterior, e isso precisa ser dito ao leitor: a redistribuição de
 cadeiras de 2023 alterou a bancada de vários estados.
+
+## ADR-013 — Ciclo parcial tem metadados, não apenas um aviso
+
+**Contexto.** Dizer que 2026 é parcial não informa quanto do FEFC já aparece no
+recorte, se existem resultados ou de qual eleição vêm as cadeiras usadas como
+referência. Um número parcial sem essas respostas parece comparável aos ciclos
+encerrados.
+
+**Decisão.** Cada ciclo exportado passa a informar status, FEFC direto
+observado, dotação oficial disponível, razão entre os dois, disponibilidade de
+resultados e anos de referência das cadeiras. A definição vive em
+`metodologia.py` e é testada fora do dashboard.
+
+**Limite deliberado.** A razão `receitas diretas / dotação` não recebe o nome
+de progresso ou conclusão. A dotação pode permanecer no partido, ser devolvida
+ou circular por canais excluídos do recorte direto. Ela é uma reconciliação de
+escopo, não uma previsão do total final.
