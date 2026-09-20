@@ -1,7 +1,12 @@
 {
   "name": "fundo-eleitoral-br",
   "image": "mcr.microsoft.com/devcontainers/python:3.11",
-  "postCreateCommand": "pip install -e '.[dev]'",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22"
+    }
+  },
+  "postCreateCommand": "pip install -e '.[dev]' && corepack enable && pnpm --dir dashboard install --frozen-lockfile",
   "customizations": {
     "vscode": {
       "extensions": ["ms-python.python", "charliermarsh.ruff"]

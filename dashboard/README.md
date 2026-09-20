@@ -9,7 +9,7 @@ permanece apenas onde a denominação técnica é necessária para o método.
 ## Desenvolvimento
 
 Requer Node >=22.13 e pnpm. Execute `pnpm install` e `pnpm dev`.
-Para validar: `pnpm exec tsc --noEmit`, `pnpm test` e `pnpm build`.
+Para validar testes, tipos, lint e build em sequência, execute `pnpm check`.
 
 ## Atualização dos dados
 

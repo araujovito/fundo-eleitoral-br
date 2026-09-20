@@ -223,6 +223,7 @@ Colab), sem ocupar disco local. Há um `.devcontainer` pronto.
 make verificar                              # testa as 9 URLs sem baixar nada
 REPO=usuario/fundo-eleitoral-br make tudo   # ingere e publica o ciclo
 make teste
+make check                                  # backend e dashboard
 
 make ingerir ANO=2018                       # um ciclo especifico
 ```

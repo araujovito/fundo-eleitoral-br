@@ -1,5 +1,5 @@
 {
-  "name": "sites-project",
+  "name": "festa-da-democracia",
   "version": "0.1.0",
   "private": true,
   "engines": {
@@ -11,6 +11,8 @@
     "start": "wrangler dev --config dist/server/wrangler.json",
     "lint": "oxlint",
     "test": "node --experimental-strip-types --test tests/data.test.ts",
+    "typecheck": "tsc --noEmit",
+    "check": "pnpm test && pnpm typecheck && pnpm lint && pnpm build",
     "format": "oxfmt"
   },
   "dependencies": {

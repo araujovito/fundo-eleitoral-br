@@ -3,7 +3,7 @@
 
 ANO ?= 2022
 
-.PHONY: setup verificar ingerir publicar tudo teste checar-token
+.PHONY: setup verificar ingerir publicar tudo teste lint-python dashboard-check check checar-token
 
 setup:
 	pip install -e '.[dev]'
@@ -34,3 +34,11 @@ tudo: checar-token ingerir publicar
 
 teste:
 	python -m pytest -q
+
+lint-python:
+	python -m ruff check src tests
+
+dashboard-check:
+	pnpm --dir dashboard check
+
+check: teste lint-python dashboard-check
