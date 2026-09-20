@@ -41,7 +41,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Cell as ChartCell,
   AreaChart,
   Area,
 } from 'recharts';
@@ -197,15 +196,17 @@ export function Ranking({
   metric?: 'value' | 'index';
 }) {
   return (
-    <div
+    <figure
       className="chart"
-      role="img"
       aria-label="Ranking em barras; cada barra usa a cor de identidade visual do partido e os valores estão disponíveis na tabela"
     >
       <ResponsiveContainer width="100%" height={340}>
         <BarChart
           layout="vertical"
-          data={rows.slice(0, 10)}
+          data={rows.slice(0, 10).map((row) => ({
+            ...row,
+            fill: partyColor(row.name),
+          }))}
           margin={{ top: 4, right: 36, left: 0, bottom: 0 }}
         >
           <CartesianGrid
@@ -246,14 +247,10 @@ export function Ranking({
             name={metric === 'value' ? 'Fundo eleitoral direto' : 'Índice'}
             radius={[0, 4, 4, 0]}
             barSize={15}
-          >
-            {rows.slice(0, 10).map((r) => (
-              <ChartCell key={r.name} fill={partyColor(r.name)} />
-            ))}
-          </Bar>
+          />
         </BarChart>
       </ResponsiveContainer>
-    </div>
+    </figure>
   );
 }
 export default function Home() {
@@ -498,11 +495,11 @@ export default function Home() {
             <button onClick={() => location.reload()}>Tentar novamente</button>
           </div>
         ) : !data ? (
-          <div className="loading" role="status">
+          <output className="loading">
             <Layers3 size={28} />
             <h2>Preparando o observatório</h2>
             <p>Carregando os agregados do TSE…</p>
-          </div>
+          </output>
         ) : (
           <>
             <section className="story-lede" aria-labelledby="leitura-titulo">

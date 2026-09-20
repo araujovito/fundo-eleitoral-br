@@ -19,7 +19,6 @@ import {
   Legend,
   ReferenceLine,
   Sankey,
-  Cell as ChartCell,
 } from 'recharts';
 import {
   Table,
@@ -122,6 +121,12 @@ export function Territory({
     .map((row) => ({
       ...row,
       plottedIndex: hasSeats ? row.seatIndex || 0 : row.index,
+      fill:
+        (hasSeats ? row.seatIndex || 0 : row.index) > 1.1
+          ? '#d9461d'
+          : (hasSeats ? row.seatIndex || 0 : row.index) < 0.9
+            ? '#d9cabc'
+            : '#f0a27f',
       region:
         Object.entries(regions).find(([, ufs]) => ufs.includes(row.uf))?.[0] ||
         '',
@@ -223,20 +228,7 @@ export function Territory({
                   name="Índice territorial"
                   radius={[0, 4, 4, 0]}
                   barSize={13}
-                >
-                  {ranking.map((row) => (
-                    <ChartCell
-                      key={row.uf}
-                      fill={
-                        row.plottedIndex > 1.1
-                          ? '#d9461d'
-                          : row.plottedIndex < 0.9
-                            ? '#d9cabc'
-                            : '#f0a27f'
-                      }
-                    />
-                  ))}
-                </Bar>
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
