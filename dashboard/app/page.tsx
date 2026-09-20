@@ -52,6 +52,9 @@ import {
   sum,
   group,
   selectCells,
+  parseDashboardState,
+  dashboardSearch,
+  type DashboardView,
 } from '@/lib/data';
 import {
   Territory,
@@ -259,7 +262,7 @@ export default function Home() {
   const [year, setYear] = useState('2022'),
     [party, setParty] = useState('Todos os partidos'),
     [office, setOffice] = useState('Todos os cargos');
-  const [view, setView] = useState('overview'),
+  const [view, setView] = useState<DashboardView>('overview'),
     [search, setSearch] = useState('');
   useEffect(() => {
     fetch('/data.json')
@@ -271,10 +274,31 @@ export default function Home() {
         const d = value as Dataset;
         if (!d.years?.['2022']?.cells || !d.generatedAt)
           throw new Error('Dados inválidos');
+        const requested = parseDashboardState(window.location.search);
+        const initialCells = d.years[requested.year]?.cells || d.years['2022'].cells;
+        setYear(d.years[requested.year] ? requested.year : '2022');
+        setParty(
+          requested.party === 'Todos os partidos' ||
+            initialCells.some((c) => c.party === requested.party)
+            ? requested.party
+            : 'Todos os partidos',
+        );
+        setOffice(
+          requested.office === 'Todos os cargos' ||
+            initialCells.some((c) => c.office === requested.office)
+            ? requested.office
+            : 'Todos os cargos',
+        );
+        setView(requested.view);
         setData(d);
       })
       .catch(() => setError(true));
   }, []);
+  useEffect(() => {
+    if (!data) return;
+    const searchParams = dashboardSearch({year, party, office, view});
+    window.history.replaceState(null, '', `${window.location.pathname}${searchParams}`);
+  }, [data, year, party, office, view]);
   useEffect(() => {
     type ModelContext = {
       registerTool: (
@@ -455,6 +479,7 @@ export default function Home() {
             onChange={(v) => {
               setYear(v);
               setParty('Todos os partidos');
+              setOffice('Todos os cargos');
               setSearch('');
             }}
           />
@@ -597,7 +622,7 @@ export default function Home() {
             </div>
             <Tabs
               value={view}
-              onValueChange={(v) => setView(String(v))}
+              onValueChange={(v) => setView(String(v) as DashboardView)}
               className="analysis-tabs"
             >
               <TabsList variant="line" className="navigation">

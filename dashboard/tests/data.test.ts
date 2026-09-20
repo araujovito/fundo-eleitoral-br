@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { group, selectCells, sum, money, percent, type Dataset } from '../lib/data.ts';
+import { dashboardSearch, group, parseDashboardState, selectCells, sum, money, percent, type Dataset } from '../lib/data.ts';
 
 const data = JSON.parse(readFileSync(new URL('../public/data.json', import.meta.url), 'utf8')) as Dataset;
 void test('snapshot reconciles with the published direct FEFC totals', () => {
@@ -30,3 +30,8 @@ void test('snapshot contains aggregates only and no 2026 vote result', () => {
   assert.ok(Math.abs((data.years['2026'].metadata?.coveragePercent ?? 0)-92.93)<0.01);
 });
 void test('empty values remain readable',()=>{assert.equal(percent(NaN),'0%');assert.equal(money(0),'R$ 0');});
+void test('dashboard state round-trips through a shareable URL',()=>{
+  const state={year:'2026',party:'PT',office:'DEPUTADO FEDERAL',view:'territory' as const};
+  assert.deepEqual(parseDashboardState(dashboardSearch(state)),state);
+  assert.deepEqual(parseDashboardState('?ano=1999&visao=inexistente'),{year:'2022',party:'Todos os partidos',office:'Todos os cargos',view:'overview'});
+});
