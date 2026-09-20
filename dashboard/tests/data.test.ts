@@ -24,5 +24,9 @@ void test('snapshot contains aggregates only and no 2026 vote result', () => {
   const text=readFileSync(new URL('../public/data.json',import.meta.url),'utf8');
   for(const field of ['sq_candidato','nr_cpf','nr_cnpj','nm_candidato']) assert.ok(!text.includes(field));
   assert.equal(data.years['2026'].efficiency.length,0);
+  assert.equal(data.years['2026'].metadata?.status,'partial');
+  assert.equal(data.years['2026'].metadata?.resultsAvailable,false);
+  assert.equal(data.years['2026'].metadata?.officialAllocation,4961519777);
+  assert.ok(Math.abs((data.years['2026'].metadata?.coveragePercent ?? 0)-92.93)<0.01);
 });
 void test('empty values remain readable',()=>{assert.equal(percent(NaN),'0%');assert.equal(money(0),'R$ 0');});

@@ -484,8 +484,19 @@ export default function Home() {
         </div>
         {year === '2026' && (
           <div className="notice">
-            <CircleHelp size={17} /> 2026 está em prestação parcial. Os valores
-            podem mudar e não são diretamente comparáveis aos ciclos encerrados.
+            <CircleHelp size={17} />
+            <span>
+              2026 está em prestação parcial.{' '}
+              {data?.years['2026']?.metadata?.coveragePercent != null && (
+                <>
+                  O FEFC direto observado equivale a{' '}
+                  <b>{percent(data.years['2026'].metadata.coveragePercent)}</b>{' '}
+                  da dotação oficial.{' '}
+                </>
+              )}
+              Os valores podem mudar e não são diretamente comparáveis aos
+              ciclos encerrados.
+            </span>
           </div>
         )}
         {error ? (

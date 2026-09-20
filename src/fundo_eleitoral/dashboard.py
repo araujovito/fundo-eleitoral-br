@@ -15,6 +15,7 @@ from pathlib import Path
 import duckdb
 
 from .consulta import DIMENSOES, FONTE_FEFC, HF, VALOR, caminho, cte_fefc
+from .metodologia import resumo_ciclo
 
 
 def exportar(destino: Path, raiz: str = HF, anos: tuple[int, ...] = (2018, 2022, 2026)):
@@ -122,14 +123,21 @@ def exportar(destino: Path, raiz: str = HF, anos: tuple[int, ...] = (2018, 2022,
                        "PCDOB" if donor_party == "PC DO B" else donor_party,
                        normalizar(source), normalizar(target))
                 flows[key] += value
+        total_observado = sum(cell["value"] for cell in cells)
         resultado["years"][str(ano)] = {
+            "metadata": resumo_ciclo(
+                ano,
+                total_observado,
+                resultados_disponiveis=bool(efficiency),
+                anos_referencia_cadeiras={ref["year"] for ref in seats.values()},
+            ).json(),
             "cells": sorted(cells, key=lambda x: (x["party"], x["uf"] or "", x["office"] or "")),
             "electorate": electorate, "seats": seats, "efficiency": efficiency,
             "concentration": concentration, "renewal": renewal,
             "flows": [{"party": p, "donorParty": dp, "source": s, "target": t,
                        "value": round(v, 2)} for (p, dp, s, t), v in flows.items()],
         }
-        print(f"{ano}: {len(cells)} células; R$ {sum(c['value'] for c in cells):,.2f}", flush=True)
+        print(f"{ano}: {len(cells)} células; R$ {total_observado:,.2f}", flush=True)
     destino.parent.mkdir(parents=True, exist_ok=True)
     temporario = destino.with_suffix(".tmp")
     temporario.write_text(json.dumps(resultado, ensure_ascii=False, allow_nan=False,

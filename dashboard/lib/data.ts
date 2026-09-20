@@ -4,7 +4,8 @@ export type Efficiency = {party: string; uf: string; office: string; value: numb
 export type Concentration = {party: string; gini: number; coverage: number; top10: number};
 export type Renewal = {profile: string; value: number; candidates: number; share: number};
 export type SeatReference = {year: number; byUf: Record<string, number>};
-export type Dataset = {generatedAt: string; source: string; years: Record<string, {cells: Cell[]; electorate: Record<string, number>; seats: Record<string, SeatReference>; efficiency: Efficiency[]; flows: Flow[]; concentration: Concentration[]; renewal: Renewal[]}>};
+export type CycleMetadata = {status: 'partial' | 'final'; partial: boolean; observedDirectFefc: number; officialAllocation: number | null; coveragePercent: number | null; coverageBasis: string | null; resultsAvailable: boolean; seatReferenceYears: number[]};
+export type Dataset = {generatedAt: string; source: string; years: Record<string, {metadata?: CycleMetadata; cells: Cell[]; electorate: Record<string, number>; seats: Record<string, SeatReference>; efficiency: Efficiency[]; flows: Flow[]; concentration: Concentration[]; renewal: Renewal[]}>};
 export const number = (v: number) => new Intl.NumberFormat('pt-BR').format(v || 0);
 export const percent = (v: number) => `${Number.isFinite(v) ? v.toLocaleString('pt-BR', {maximumFractionDigits: 1}) : '0'}%`;
 export function money(v: number, symbol = true) {
