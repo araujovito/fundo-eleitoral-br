@@ -392,7 +392,12 @@ export default function Home() {
     [data, year],
   );
   const ranking = useMemo(() => group(cells, 'party'), [cells]);
+  const comparisonCells = useMemo(
+    () => (data ? selectCells(data, year, 'Todos os partidos', office) : []),
+    [data, year, office],
+  );
   const total = sum(cells, 'value'),
+    comparisonTotal = sum(comparisonCells, 'value'),
     candidates = sum(cells, 'candidates'),
     funded = sum(cells, 'funded');
   const female = sum(
@@ -407,6 +412,11 @@ export default function Home() {
   const topFiveShare = total
     ? (ranking.slice(0, 5).reduce((s, r) => s + r.value, 0) / total) * 100
     : 0;
+  const selectedPartyShare = comparisonTotal
+    ? (total / comparisonTotal) * 100
+    : 0;
+  const shareDenominator =
+    party === 'Todos os partidos' ? total : comparisonTotal;
   const femaleShare = total ? (female / total) * 100 : 0;
   const trend = data
     ? Object.keys(data.years).map((y) => ({
@@ -556,9 +566,17 @@ export default function Home() {
                   </p>
                 </div>
                 <div className="story-number">
-                  <strong>{percent(topFiveShare)}</strong>
+                  <strong>
+                    {percent(
+                      party === 'Todos os partidos'
+                        ? topFiveShare
+                        : selectedPartyShare,
+                    )}
+                  </strong>
                   <span>
-                    do fundo está nos cinco maiores partidos deste recorte
+                    {party === 'Todos os partidos'
+                      ? 'do fundo está nos cinco maiores partidos deste recorte'
+                      : `do fundo comparável foi destinado ao ${party}`}
                   </span>
                 </div>
               </div>
@@ -566,13 +584,16 @@ export default function Home() {
                 <article>
                   <span>01 · CONCENTRAÇÃO</span>
                   <b>
-                    {topParty
-                      ? `${topParty.name} lidera com ${percent((topParty.value / total) * 100)}`
-                      : 'Sem dados no recorte'}
+                    {party !== 'Todos os partidos'
+                      ? `${party} recebeu ${percent(selectedPartyShare)} do total comparável`
+                      : topParty
+                        ? `${topParty.name} lidera com ${percent((topParty.value / total) * 100)}`
+                        : 'Sem dados no recorte'}
                   </b>
                   <p>
-                    A posição muda quando você seleciona um cargo, partido ou
-                    ciclo.
+                    {party === 'Todos os partidos'
+                      ? 'A posição muda quando você seleciona um cargo, partido ou ciclo.'
+                      : `A comparação considera todos os partidos em ${year} para o mesmo cargo.`}
                   </p>
                 </article>
                 <article>
@@ -728,26 +749,27 @@ export default function Home() {
                       </div>
                       <strong>
                         {percent(
-                          (ranking
-                            .slice(0, 5)
-                            .reduce((s, r) => s + r.value, 0) /
-                            total) *
-                            100,
+                          party === 'Todos os partidos'
+                            ? topFiveShare
+                            : selectedPartyShare,
                         )}
                       </strong>
                       <p>
-                        do fundo eleitoral do recorte está nos{' '}
-                        {Math.min(5, ranking.length)} partidos com maior volume.
+                        {party === 'Todos os partidos'
+                          ? `do fundo eleitoral do recorte está nos ${Math.min(5, ranking.length)} partidos com maior volume.`
+                          : `do fundo comparável foi destinado ao ${party}.`}
                       </p>
                       <span>
-                        Participação entre partidos, não entre candidatos.
+                        {party === 'Todos os partidos'
+                          ? 'Participação entre partidos, não entre candidatos.'
+                          : `Base: todos os partidos em ${year}, para o mesmo cargo.`}
                       </span>
                     </article>
                   </div>
                 </div>
                 <Panel
                   title="Partido por partido"
-                  subtitle={`A fatia do total divide o valor do partido pelos ${money(total)} do recorte selecionado`}
+                  subtitle={`A fatia do total divide o valor do partido pelos ${money(shareDenominator)} de todos os partidos no mesmo ciclo e cargo`}
                   tag={`${ranking.length} partidos`}
                 >
                   <div className="table-tools">
@@ -773,7 +795,7 @@ export default function Home() {
                       {table.map((r, i) => (
                         <TableRow key={r.name}>
                           <TableCell
-                            aria-label={`${r.name}: ${percent((r.value / total) * 100)} dos ${money(total)} do recorte`}
+                            aria-label={`${r.name}: ${percent((r.value / shareDenominator) * 100)} dos ${money(shareDenominator)} de todos os partidos no mesmo ciclo e cargo`}
                           >
                             <span className="rank-number">{i + 1}</span>
                             <b>{r.name}</b>
@@ -786,11 +808,11 @@ export default function Home() {
                               <span className="bar-track">
                                 <i
                                   style={{
-                                    width: `${(r.value / total) * 100}%`,
+                                    width: `${(r.value / shareDenominator) * 100}%`,
                                   }}
                                 />
                               </span>
-                              {percent((r.value / total) * 100)}
+                              {percent((r.value / shareDenominator) * 100)}
                             </div>
                           </TableCell>
                           <TableCell className="numeric">
